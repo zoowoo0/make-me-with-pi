@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Make Me with Pi (MM)</title>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<style>
+  :root {
+    --purple: #5b2c83;
+    --purple-dark: #3d1c5a;
+    --gold: #f5a623;
+    --teal: #00897b;
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #222222;
+    --border: #e0e4e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', -apple-system, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding-bottom: 40px; }
+  header {
+    background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+    color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 { font-size: 1.25rem; }
+  header span.sub { font-size: 0.8rem; color: var(--gold); display: block; margin-top: 2px; }
+  .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .user-badge { background: rgba(255,255,255,0.16); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; }
+  button {
+    cursor: pointer; border: none; border-radius: 8px; padding: 8px 14px;
+    font-weight: bold; font-size: 0.88rem; transition: 0.15s;
+  }
+  button:hover { opacity: 0.9; }
+  .btn-gold { background: var(--gold); color: #222; }
+  .btn-logout { background: #ffffff; color: var(--purple); }
+  .btn-lang { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+  .btn-purple { background: var(--purple); color: #fff; }
+  .btn-teal { background: var(--teal); color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; }
+  .btn-danger { background: #e53935; color: #fff; padding: 5px 10px; font-size: 0.8rem; }
+
+  nav.tabs {
+    display: flex; background: #fff; border-bottom: 2px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  nav.tabs button {
+    flex: 1; background: transparent; color: #666; border-radius: 0;
+    padding: 13px 6px; font-size: 0.9rem; border-bottom: 3px solid transparent;
+  }
+  nav.tabs button.active {
+    color: var(--purple); border-bottom-color: var(--purple); background: #faf7fc;
+  }
+
+  main { max-width: 840px; margin: 18px auto; padding: 0 14px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card {
+    background: var(--card); border-radius: 12px; padding: 18px;
+    margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 1.05rem; color: var(--purple); margin-bottom: 14px;
+    border-left: 4px solid var(--gold); padding-left: 9px;
+  }
+
+  .vision-box {
+    background: #faf8fc; border: 1px solid #e6dcf0; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .vision-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .vision-title { font-weight: bold; font-size: 0.9rem; color: var(--purple); }
+  .vision-text { font-size: 0.94rem; color: #333; white-space: pre-wrap; line-height: 1.45; }
+  .vision-edit-area { display: none; margin-top: 8px; }
+  .vision-edit-area.open { display: block; }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 12px; }
+  label { display: block; font-size: 0.84rem; font-weight: bold; margin-bottom: 5px; color: #444; }
+  input[type="text"], input[type="number"], input[type="time"], select, textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid #ccc; border-radius: 8px;
+    font-size: 0.93rem; margin-bottom: 8px;
+  }
+  .row-input { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .row-input input, .row-input select { flex: 1; min-width: 110px; margin-bottom: 0; }
+
+  ul.item-list { list-style: none; margin-top: 12px; }
+  ul.item-list li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; background: #f9fafb; border: 1px solid #eee;
+    border-radius: 8px; margin-bottom: 8px; gap: 10px;
+  }
+  .done-text { text-decoration: line-through; color: #999; }
+  .tag { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; background: #eee; font-weight: bold; }
+  .tag-study { background: #e8eaf6; color: #3f51b5; }
+  .tag-proj { background: #e0f2f1; color: #00695c; }
+
+  .timer-box { text-align: center; padding: 14px 0; }
+  .timer-display { font-size: 2.3rem; font-weight: bold; color: var(--purple); letter-spacing: 2px; margin: 10px 0 14px; font-variant-numeric: tabular-nums; }
+
+  .prompter-box {
+    background: linear-gradient(135deg, #2c1642, #4a236b); color: #fff;
+    border-radius: 12px; padding: 20px; text-align: center; margin-top: 12px;
+  }
+  .prompter-label { font-size: 0.78rem; color: var(--gold); letter-spacing: 1px; margin-bottom: 8px; }
+  .prompter-line { font-size: 1.08rem; font-weight: bold; line-height: 1.5; min-height: 52px; display: flex; align-items: center; justify-content: center; }
+
+  @media print {
+    header, nav.tabs, .no-print, button { display: none !important; }
+    body { background: #fff; padding: 0; }
+    main { max-width: 100%; margin: 0; padding: 0; }
+    .tab-panel { display: block !important; }
+    #tab2, #tab3, #tab4 { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #bbb; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 id="appTitle">Make Me with Pi (MM)</h1>
+    <span class="sub" id="appSub">정·기·신 3대 바디 의식적 조절 & 자기창조 시스템</span>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn-lang" id="langBtn" onclick="toggleLang()">English</button>
+    <span id="userDisplay" class="user-badge">게스트 상태</span>
+    <button type="button" id="authBtn" class="btn-gold" onclick="handleAuthClick()">Pi 로그인</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button type="button" class="tab-btn active" data-target="tab1" id="nav1">1. 정·기·신 다이어리</button>
+  <button type="button" class="tab-btn" data-target="tab2" id="nav2">2. 열품타 스터디</button>
+  <button type="button" class="tab-btn" data-target="tab3" id="nav3">3. 프로젝트 방</button>
+  <button type="button" class="tab-btn" data-target="tab4" id="nav4">4. 통합 일정표 & 브리핑</button>
+</nav>
+
+<main>
+  <!-- 탭 1 -->
+  <section id="tab1" class="tab-panel active">
+    <div class="card">
+      <h2 id="hVision">4단계 비전 & 오늘의 정·기·신 상태</h2>
+
+      <div class="vision-box">
+        <div class="vision-head">
+          <span class="vision-title" id="lblVLife">인생 비전</span>
+          <button type="button" class="btn-purple btn-sm" onclick="toggleVisionEdit('vLife')" id="btnEditVLife">수정</button>
+        </div>
+        <div class="vision-text" id="dispVLife"></div>
+        <div class="vision-edit-area" id="editVLife">
+          <textarea id="inVLife" rows="2"></textarea>
+          <button type="button" class="btn-teal btn-sm" onclick="saveVisionItem('vLife')" id="btnOkVLife">확인</button>
+        </div>
+      </div>
+
+      <div class="vision-box">
+        <div class="vision-head">
+          <span class="vision-title" id="lblV10">10년 비전</span>
+          <button type="button" class="btn-purple btn-sm" onclick="toggleVisionEdit('v10')" id="btnEditV10">수정</button>
+        </div>
+        <div class="vision-text" id="dispV10"></div>
+        <div class="vision-edit-area" id="editV10">
+          <textarea id="inV10" rows="2"></textarea>
+          <button type="button" class="btn-teal btn-sm" onclick="saveVisionItem('v10')" id="btnOkV10">확인</button>
+        </div>
+      </div>
+
+      <div class="vision-box">
+        <div class="vision-head">
+          <span class="vision-title" id="lblV35">3~5년 비전</span>
+          <button type="button" class="btn-purple btn-sm" onclick="toggleVisionEdit('v35')" id="btnEditV35">수정</button>
+        </div>
+        <div class="vision-text" id="dispV35"></div>
+        <div class="vision-edit-area" id="editV35">
+          <textarea id="inV35" rows="2"></textarea>
+          <button type="button" class="btn-teal btn-sm" onclick="saveVisionItem('v35')" id="btnOkV35">확인</button>
+        </div>
+      </div>
+
+      <div class="vision-box">
+        <div class="vision-head">
+          <span class="vision-title" id="lblV12">1~2년 비전</span>
+          <button type="button" class="btn-purple btn-sm" onclick="toggleVisionEdit('v12')" id="btnEditV12">수정</button>
+        </div>
+        <div class="vision-text" id="dispV12"></div>
+        <div class="vision-edit-area" id="editV12">
+          <textarea id="inV12" rows="2"></textarea>
+          <button type="button" class="btn-teal btn-sm" onclick="saveVisionItem('v12')" id="btnOkV12">확인</button>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div>
+          <label id="lblSin">신(神 · 정보/사고)</label>
+          <input type="text" id="sinInput" />
+        </div>
+        <div>
+          <label id="lblGi">기(氣 · 감정/흐름)</label>
+          <input type="text" id="giInput" />
+        </div>
+        <div>
+          <label id="lblJeong">정(精 · 신체/행동)</label>
+          <input type="text" id="jeongInput" />
+        </div>
+      </div>
+      <div class="row-input no-print" style="margin-top:8px;">
+        <button type="button" class="btn-purple" onclick="saveBodyState()" id="btnSaveBody">정·기·신 저장</button>
+        <button type="button" class="btn-gold" onclick="window.print()" id="btnPrint">A4 다이어리 인쇄</button>
+        <span id="bodySavedMsg" style="color:var(--teal); font-weight:bold; font-size:0.85rem;"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="hPlan">오늘의 공부 · 실천 계획 (탭 2·4 자동 연동)</h2>
+      <div class="row-input no-print">
+        <input type="time" id="planTime" value="09:00" style="max-width:130px;" />
+        <select id="planType" style="max-width:130px;">
+          <option value="study" id="optStudy">공부 계획</option>
+          <option value="action" id="optAction">일반 실천</option>
+        </select>
+        <input type="text" id="planText" placeholder="할 일을 입력하세요" />
+        <button type="button" class="btn-teal" onclick="addPlan()" id="btnAddPlan">추가</button>
+      </div>
+      <ul id="planList" class="item-list"></ul>
+    </div>
+  </section>
+
+  <!-- 탭 2 -->
+  <section id="tab2" class="tab-panel">
+    <div class="card">
+      <h2 id="hTimer">열품타 집중 스톱워치</h2>
+      <div class="timer-box">
+        <div style="font-size:0.88rem; color:#666;" id="lblTimerSub">오늘의 순수 집중 공부 시간</div>
+        <div class="timer-display" id="timerDisplay">00:00:00</div>
+        <div class="row-input" style="justify-content:center;">
+          <button type="button" class="btn-teal" onclick="startTimer()" id="btnTStart">시작</button>
+          <button type="button" class="btn-gold" onclick="pauseTimer()" id="btnTPause">일시정지</button>
+          <button type="button" class="btn-danger" onclick="resetTimer()" id="btnTReset" style="padding:8px 14px; font-size:0.88rem;">초기화</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="hStudyGoal">오늘의 연동된 공부 목표 & Pi 벌금 정산</h2>
+      <div class="row-input" style="margin-bottom:10px;">
+        <label style="margin:0;" id="lblPenaltyRate">미달성 1건당 벌금(Pi):</label>
+        <input type="number" id="penaltyRate" value="1" min="0" step="0.5" style="max-width:90px; margin:0;" onchange="updatePenaltyRate()" />
+      </div>
+      <ul id="studyGoalList" class="item-list"></ul>
+      <p id="penaltySummary" style="margin-top:12px; font-weight:bold; color:var(--purple);"></p>
+    </div>
+  </section>
+
+  <!-- 탭 3 -->
+  <section id="tab3" class="tab-panel">
+    <div class="card">
+      <h2 id="hProj">프로젝트 일정 등록 (탭 4 자동 연동)</h2>
+      <div class="row-input" style="margin-bottom:8px;">
+        <input type="time" id="projTime" value="14:00" style="max-width:130px;" />
+        <input type="text" id="projTitle" placeholder="프로젝트명" />
+      </div>
+      <div class="row-input">
+        <input type="text" id="projDetail" placeholder="참여 인원 및 실행 내용" />
+        <button type="button" class="btn-purple" onclick="addProject()" id="btnAddProj">등록</button>
+      </div>
+      <ul id="projectList" class="item-list"></ul>
+    </div>
+  </section>
+
+  <!-- 탭 4 -->
+  <section id="tab4" class="tab-panel">
+    <div class="card">
+      <h2 id="hBrief">아침 모닝 브리핑 (음성 TTS & 비주얼 프롬프터)</h2>
+      <label id="lblAffirm">긍정 확언 & 오늘 외울 암기 문장</label>
+      <textarea id="affirmInput" rows="2" placeholder="오늘 아침 나에게 들려줄 긍정 문장을 입력하세요"></textarea>
+      <div class="row-input">
+        <button type="button" class="btn-purple" onclick="saveAffirm()" id="btnSaveAffirm">문구 저장</button>
+        <button type="button" class="btn-teal" onclick="startBriefing()" id="btnStartBrief">브리핑 실행</button>
+        <button type="button" class="btn-danger" onclick="stopBriefing()" id="btnStopBrief" style="padding:8px 14px; font-size:0.88rem;">정지</button>
+      </div>
+      <div class="prompter-box">
+        <div class="prompter-label">MORNING BRIEFING</div>
+        <div class="prompter-line" id="prompterText">버튼을 누르면 비전과 오늘의 일정이 브리핑됩니다.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="hIntegrated">통합 자동 일정표 (시간순 자동 취합)</h2>
+      <ul id="integratedList" class="item-list"></ul>
+    </div>
+  </section>
+</main>
+
+<script>
+  const STORAGE_KEY = 'mm_pi_state_v3';
+  let state = {
+    lang: 'ko',
+    user: null,
+    vLife: '',
+    v10: '',
+    v35: '',
+    v12: '',
+    sin: '',
+    gi: '',
+    jeong: '',
+    plans: [],
+    projects: [],
+    penaltyRate: 1,
+    timerSec: 0,
+    affirm: ''
+  };
+
+  const i18n = {
+    ko: {
+      appSub: '정·기·신 3대 바디 의식적 조절 & 자기창조 시스템',
+      langBtn: 'English',
+      guest: '게스트 상태',
+      loggedInSuffix: ' 로그인됨',
+      loginBtn: 'Pi 로그인',
+      logoutBtn: '로그아웃',
+      nav1: '1. 정·기·신 다이어리',
+      nav2: '2. 열품타 스터디',
+      nav3: '3. 프로젝트 방',
+      nav4: '4. 통합 일정표 & 브리핑',
+      hVision: '4단계 비전 & 오늘의 정·기·신 상태',
+      vLife: '인생 비전',
+      v10: '10년 비전',
+      v35: '3~5년 비전',
+      v12: '1~2년 비전',
+      edit: '수정',
+      ok: '확인',
+      emptyVision: '입력된 비전이 없습니다. [수정]을 눌러 작성해 보세요.',
+      sin: '신(神 · 정보/사고)',
+      gi: '기(氣 · 감정/흐름)',
+      jeong: '정(精 · 신체/행동)',
+      saveBody: '정·기·신 저장',
+      print: 'A4 다이어리 인쇄',
+      saved: '저장되었습니다!',
+      hPlan: '오늘의 공부 · 실천 계획 (탭 2·4 자동 연동)',
+      optStudy: '공부 계획',
+      optAction: '일반 실천',
+      planPh: '할 일을 입력하세요',
+      add: '추가',
+      del: '삭제',
+      noPlan: '등록된 계획이 없습니다.',
+      hTimer: '열품타 집중 스톱워치',
+      timerSub: '오늘의 순수 집중 공부 시간',
+      tStart: '시작',
+      tPause: '일시정지',
+      tReset: '초기화',
+      hStudyGoal: '오늘의 연동된 공부 목표 & Pi 벌금 정산',
+      penaltyRate: '미달성 1건당 벌금(Pi):',
+      noStudy: '탭 1에서 [공부 계획]을 등록하면 자동으로 표시됩니다.',
+      done: '달성 완료',
+      doing: '진행 중',
+      hProj: '프로젝트 일정 등록 (탭 4 자동 연동)',
+      projTitlePh: '프로젝트명',
+      projDetailPh: '참여 인원 및 실행 내용',
+      reg: '등록',
+      noProj: '등록된 프로젝트가 없습니다.',
+      hBrief: '아침 모닝 브리핑 (음성 TTS & 비주얼 프롬프터)',
+      affirmLbl: '긍정 확언 & 오늘 외울 암기 문장',
+      affirmPh: '오늘 아침 나에게 들려줄 긍정 문장을 입력하세요',
+      saveAffirm: '문구 저장',
+      startBrief: '브리핑 실행',
+      stopBrief: '정지',
+      prompterReady: '버튼을 누르면 비전과 오늘의 일정이 브리핑됩니다.',
+      hIntegrated: '통합 자동 일정표 (시간순 자동 취합)',
+      noIntegrated: '등록된 일정이 없습니다.'
+    },
+    en: {
+      appSub: 'Conscious Regulation of Spirit·Energy·Body & Self-Creation',
+      langBtn: '한국어',
+      guest: 'Guest Mode',
+      loggedInSuffix: ' Logged In',
+      loginBtn: 'Pi Login',
+      logoutBtn: 'Logout',
+      nav1: '1. Spirit·Energy·Body',
+      nav2: '2. Study Timer & Pi',
+      nav3: '3. Project Room',
+      nav4: '4. Integrated Briefing',
+      hVision: '4-Stage Vision & Daily Spirit·Energy·Body',
+      vLife: 'Life Vision',
+      v10: '10-Year Vision',
+      v35: '3~5 Year Vision',
+      v12: '1~2 Year Vision',
+      edit: 'Edit',
+      ok: 'OK',
+      emptyVision: 'No vision entered yet. Click [Edit] to write.',
+      sin: 'Spirit (신 · Info/Mind)',
+      gi: 'Energy (기 · Emotion/Flow)',
+      jeong: 'Body (정 · Physical/Action)',
+      saveBody: 'Save Status',
+      print: 'Print A4 Diary',
+      saved: 'Saved!',
+      hPlan: 'Daily Study & Action Plan (Auto-Sync)',
+      optStudy: 'Study Plan',
+      optAction: 'Daily Action',
+      planPh: 'Enter your task',
+      add: 'Add',
+      del: 'Delete',
+      noPlan: 'No plans added yet.',
+      hTimer: 'Focus Study Stopwatch',
+      timerSub: 'Pure Focus Study Time Today',
+      tStart: 'Start',
+      tPause: 'Pause',
+      tReset: 'Reset',
+      hStudyGoal: 'Synced Study Goals & Pi Penalty',
+      penaltyRate: 'Penalty per incomplete task (Pi):',
+      noStudy: 'Add a [Study Plan] in Tab 1 to sync here.',
+      done: 'Completed',
+      doing: 'In Progress',
+      hProj: 'Project Schedule (Auto-Sync to Tab 4)',
+      projTitlePh: 'Project Title',
+      projDetailPh: 'Members & Action Plan',
+      reg: 'Register',
+      noProj: 'No projects registered.',
+      hBrief: 'Morning Briefing (TTS Audio & Visual Prompter)',
+      affirmLbl: 'Positive Affirmation & Daily Quote',
+      affirmPh: 'Enter your morning affirmation',
+      saveAffirm: 'Save Text',
+      startBrief: 'Start Briefing',
+      stopBrief: 'Stop',
+      prompterReady: 'Press Start Briefing to play your vision and today schedule.',
+      hIntegrated: 'Integrated Master Schedule (Chronological)',
+      noIntegrated: 'No schedules available.'
+    }
+  };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) state = Object.assign(state, JSON.parse(raw));
+    } catch (e) {}
+  }
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    render();
+  }
+
+  // 탭 전환
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.target).classList.add('active');
+    });
+  });
+
+  // 한영 전환
+  function toggleLang() {
+    state.lang = state.lang === 'ko' ? 'en' : 'ko';
+    saveState();
+  }
+
+  // Pi SDK 초기화
+  function initPiSdk() {
+    try {
+      if (window.Pi && typeof window.Pi.init === 'function') {
+        window.Pi.init({ version: '2.0', sandbox: true });
+      }
+    } catch (e) {}
+  }
+  initPiSdk();
+
+  // 로그인 / 로그아웃 통합 토글 (로그아웃 후 재로그인 보장)
+  async function handleAuthClick() {
+    if (state.user) {
+      // 로그아웃 처리
+      state.user = null;
+      saveState();
+      return;
+    }
+
+    // 로그인 처리
+    initPiSdk();
+    try {
+      if (window.Pi && typeof window.Pi.authenticate === 'function') {
+        const auth = await Promise.race([
+          window.Pi.authenticate(['username', 'payments'], function() {}),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+        ]);
+        if (auth && auth.user && auth.user.username) {
+          state.user = '@' + auth.user.username;
+        } else {
+          state.user = '@mm_solohost_user';
+        }
+      } else {
+        state.user = '@mm_solohost_user';
+      }
+    } catch (e) {
+      state.user = '@mm_solohost_user';
+    }
+    saveState();
+  }
+
+  // 비전 개별 수정
+  function toggleVisionEdit(key) {
+    const map = { vLife: 'editVLife', v10: 'editV10', v35: 'editV35', v12: 'editV12' };
+    const inMap = { vLife: 'inVLife', v10: 'inV10', v35: 'inV35', v12: 'inV12' };
+    const el = document.getElementById(map[key]);
+    el.classList.toggle('open');
+    if (el.classList.contains('open')) {
+      document.getElementById(inMap[key]).value = state[key] || '';
+      document.getElementById(inMap[key]).focus();
+    }
+  }
+
+  function saveVisionItem(key) {
+    const map = { vLife: 'editVLife', v10: 'editV10', v35: 'editV35', v12: 'editV12' };
+    const inMap = { vLife: 'inVLife', v10: 'inV10', v35: 'inV35', v12: 'inV12' };
+    state[key] = document.getElementById(inMap[key]).value.trim();
+    document.getElementById(map[key]).classList.remove('open');
+    saveState();
+  }
+
+  function saveBodyState() {
+    state.sin = document.getElementById('sinInput').value.trim();
+    state.gi = document.getElementById('giInput').value.trim();
+    state.jeong = document.getElementById('jeongInput').value.trim();
+    saveState();
+    const t = i18n[state.lang];
+    const msg = document.getElementById('bodySavedMsg');
+    msg.textContent = t.saved;
+    setTimeout(() => { msg.textContent = ''; }, 2000);
+  }
+
+  // 계획 관리
+  function addPlan() {
+    const time = document.getElementById('planTime').value || '09:00';
+    const type = document.getElementById('planType').value;
+    const text = document.getElementById('planText').value.trim();
+    if (!text) return;
+    state.plans.push({ id: Date.now(), time, type, text, done: false });
+    document.getElementById('planText').value = '';
+    saveState();
+  }
+
+  function togglePlan(id) {
+    const item = state.plans.find(p => p.id === id);
+    if (item) item.done = !item.done;
+    saveState();
+  }
+
+  function deletePlan(id) {
+    state.plans = state.plans.filter(p => p.id !== id);
+    saveState();
+  }
+
+  function updatePenaltyRate() {
+    const val = parseFloat(document.getElementById('penaltyRate').value);
+    state.penaltyRate = isNaN(val) ? 1 : val;
+    saveState();
+  }
+
+  // 스톱워치
+  let timerInterval = null;
+  function formatTime(sec) {
+    const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+    const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  }
+  function startTimer() {
+    if (timerInterval) return;
+    timerInterval = setInterval(() => {
+      state.timerSec++;
+      document.getElementById('timerDisplay').textContent = formatTime(state.timerSec);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }, 1000);
+  }
+  function pauseTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  function resetTimer() {
+    pauseTimer();
+    state.timerSec = 0;
+    saveState();
+  }
+
+  // 프로젝트 관리
+  function addProject() {
+    const time = document.getElementById('projTime').value || '14:00';
+    const title = document.getElementById('projTitle').value.trim();
+    const detail = document.getElementById('projDetail').value.trim();
+    if (!title) return;
+    state.projects.push({ id: Date.now(), time, title, detail });
+    document.getElementById('projTitle').value = '';
+    document.getElementById('projDetail').value = '';
+    saveState();
+  }
+  function deleteProject(id) {
+    state.projects = state.projects.filter(p => p.id !== id);
+    saveState();
+  }
+
+  // 모닝 브리핑 (TTS + 비주얼 프롬프터)
+  let briefTimer = null;
+  function saveAffirm() {
+    state.affirm = document.getElementById('affirmInput').value.trim();
+    saveState();
+  }
+
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(528, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    } catch (e) {}
+  }
+
+  function startBriefing() {
+    stopBriefing();
+    state.affirm = document.getElementById('affirmInput').value.trim();
+    const isEn = state.lang === 'en';
+    const lines = [];
+    lines.push(isEn ? 'Good morning! Starting your Make Me with Pi briefing.' : '좋은 아침입니다! Make Me with Pi 모닝 브리핑을 시작합니다.');
+    if (state.vLife) lines.push((isEn ? 'Life Vision: ' : '인생 비전: ') + state.vLife);
+    if (state.affirm) lines.push((isEn ? 'Affirmation: ' : '긍정 확언: ') + state.affirm);
+
+    const all = [
+      ...state.plans.map(p => ({ time: p.time, text: p.text })),
+      ...state.projects.map(pr => ({ time: pr.time, text: pr.title }))
+    ].sort((a, b) => a.time.localeCompare(b.time));
+
+    if (all.length === 0) {
+      lines.push(isEn ? 'No scheduled tasks for today.' : '오늘 등록된 일정이 없습니다.');
+    } else {
+      all.forEach(item => lines.push(`${item.time} - ${item.text}`));
+    }
+
+    playBeep();
+    let idx = 0;
+    const box = document.getElementById('prompterText');
+    box.textContent = lines[0];
+
+    briefTimer = setInterval(() => {
+      idx++;
+      if (idx >= lines.length) {
+        clearInterval(briefTimer);
+        briefTimer = null;
+        return;
+      }
+      box.textContent = lines[idx];
+    }, 3200);
+
+    try {
+      if ('speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined') {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(lines.join('. '));
+        utter.lang = isEn ? 'en-US' : 'ko-KR';
+        window.speechSynthesis.speak(utter);
+      }
+    } catch (e) {}
+  }
+
+  function stopBriefing() {
+    clearInterval(briefTimer);
+    briefTimer = null;
+    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+    document.getElementById('prompterText').textContent = i18n[state.lang].prompterReady;
+  }
+
+  function esc(str) {
+    return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  }
+
+  function render() {
+    const t = i18n[state.lang];
+    document.getElementById('appSub').textContent = t.appSub;
+    document.getElementById('langBtn').textContent = t.langBtn;
+
+    const userBadge = document.getElementById('userDisplay');
+    const authBtn = document.getElementById('authBtn');
+    if (state.user) {
+      userBadge.textContent = state.user + t.loggedInSuffix;
+      authBtn.textContent = t.logoutBtn;
+      authBtn.className = 'btn-logout';
+    } else {
+      userBadge.textContent = t.guest;
+      authBtn.textContent = t.loginBtn;
+      authBtn.className = 'btn-gold';
+    }
+
+    document.getElementById('nav1').textContent = t.nav1;
+    document.getElementById('nav2').textContent = t.nav2;
+    document.getElementById('nav3').textContent = t.nav3;
+    document.getElementById('nav4').textContent = t.nav4;
+
+    document.getElementById('hVision').textContent = t.hVision;
+    document.getElementById('lblVLife').textContent = t.vLife;
+    document.getElementById('lblV10').textContent = t.v10;
+    document.getElementById('lblV35').textContent = t.v35;
+    document.getElementById('lblV12').textContent = t.v12;
+
+    ['btnEditVLife', 'btnEditV10', 'btnEditV35', 'btnEditV12'].forEach(id => document.getElementById(id).textContent = t.edit);
+    ['btnOkVLife', 'btnOkV10', 'btnOkV35', 'btnOkV12'].forEach(id => document.getElementById(id).textContent = t.ok);
+
+    document.getElementById('dispVLife').textContent = state.vLife || t.emptyVision;
+    document.getElementById('dispV10').textContent = state.v10 || t.emptyVision;
+    document.getElementById('dispV35').textContent = state.v35 || t.emptyVision;
+    document.getElementById('dispV12').textContent = state.v12 || t.emptyVision;
+
+    document.getElementById('lblSin').textContent = t.sin;
+    document.getElementById('lblGi').textContent = t.gi;
+    document.getElementById('lblJeong').textContent = t.jeong;
+    document.getElementById('sinInput').value = state.sin || '';
+    document.getElementById('giInput').value = state.gi || '';
+    document.getElementById('jeongInput').value = state.jeong || '';
+    document.getElementById('btnSaveBody').textContent = t.saveBody;
+    document.getElementById('btnPrint').textContent = t.print;
+
+    document.getElementById('hPlan').textContent = t.hPlan;
+    document.getElementById('optStudy').textContent = t.optStudy;
+    document.getElementById('optAction').textContent = t.optAction;
+    document.getElementById('planText').placeholder = t.planPh;
+    document.getElementById('btnAddPlan').textContent = t.add;
+
+    const planListEl = document.getElementById('planList');
+    planListEl.innerHTML = state.plans.length === 0
+      ? `<li style="color:#888;">${t.noPlan}</li>`
+      : state.plans.map(p => `
+        <li>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" ${p.done ? 'checked' : ''} onchange="togglePlan(${p.id})" />
+            <span class="tag ${p.type === 'study' ? 'tag-study' : ''}">${p.time} · ${p.type === 'study' ? t.optStudy : t.optAction}</span>
+            <span class="${p.done ? 'done-text' : ''}">${esc(p.text)}</span>
+          </div>
+          <button type="button" class="btn-danger" onclick="deletePlan(${p.id})">${t.del}</button>
+        </li>
+      `).join('');
+
+    document.getElementById('hTimer').textContent = t.hTimer;
+    document.getElementById('lblTimerSub').textContent = t.timerSub;
+    document.getElementById('timerDisplay').textContent = formatTime(state.timerSec);
+    document.getElementById('btnTStart').textContent = t.tStart;
+    document.getElementById('btnTPause').textContent = t.tPause;
+    document.getElementById('btnTReset').textContent = t.tReset;
+
+    document.getElementById('hStudyGoal').textContent = t.hStudyGoal;
+    document.getElementById('lblPenaltyRate').textContent = t.penaltyRate;
+    document.getElementById('penaltyRate').value = state.penaltyRate;
+
+    const studyPlans = state.plans.filter(p => p.type === 'study');
+    const studyGoalEl = document.getElementById('studyGoalList');
+    studyGoalEl.innerHTML = studyPlans.length === 0
+      ? `<li style="color:#888;">${t.noStudy}</li>`
+      : studyPlans.map(p => `
+        <li>
+          <div>
+            <span class="tag tag-study">${p.time}</span>
+            <span class="${p.done ? 'done-text' : ''}">${esc(p.text)}</span>
+          </div>
+          <span>${p.done ? '✅ ' + t.done : '⏳ ' + t.doing}</span>
+        </li>
+      `).join('');
+
+    const undone = studyPlans.filter(p => !p.done).length;
+    const totalPenalty = undone * state.penaltyRate;
+    document.getElementById('penaltySummary').textContent = state.lang === 'en'
+      ? `Incomplete: ${undone} / ${studyPlans.length} (Estimated Penalty: ${totalPenalty} Pi)`
+      : `총 공부 목표 ${studyPlans.length}건 중 미달성 ${undone}건 (예상 벌금: ${totalPenalty} Pi)`;
+
+    document.getElementById('hProj').textContent = t.hProj;
+    document.getElementById('projTitle').placeholder = t.projTitlePh;
+    document.getElementById('projDetail').placeholder = t.projDetailPh;
+    document.getElementById('btnAddProj').textContent = t.reg;
+
+    const projListEl = document.getElementById('projectList');
+    projListEl.innerHTML = state.projects.length === 0
+      ? `<li style="color:#888;">${t.noProj}</li>`
+      : state.projects.map(pr => `
+        <li>
+          <div>
+            <span class="tag tag-proj">${pr.time}</span>
+            <strong>${esc(pr.title)}</strong>
+            <div style="font-size:0.84rem; color:#555; margin-top:3px;">${esc(pr.detail)}</div>
+          </div>
+          <button type="button" class="btn-danger" onclick="deleteProject(${pr.id})">${t.del}</button>
+        </li>
+      `).join('');
+
+    document.getElementById('hBrief').textContent = t.hBrief;
+    document.getElementById('lblAffirm').textContent = t.affirmLbl;
+    document.getElementById('affirmInput').placeholder = t.affirmPh;
+    document.getElementById('affirmInput').value = state.affirm || '';
+    document.getElementById('btnSaveAffirm').textContent = t.saveAffirm;
+    document.getElementById('btnStartBrief').textContent = t.startBrief;
+    document.getElementById('btnStopBrief').textContent = t.stopBrief;
+    if (!briefTimer) {
+      document.getElementById('prompterText').textContent = t.prompterReady;
+    }
+
+    document.getElementById('hIntegrated').textContent = t.hIntegrated;
+    const combined = [
+      ...state.plans.map(p => ({ time: p.time, label: p.type === 'study' ? t.optStudy : t.optAction, text: p.text, done: p.done, isProj: false })),
+      ...state.projects.map(pr => ({ time: pr.time, label: state.lang === 'en' ? 'Project' : '프로젝트', text: pr.title + (pr.detail ? ` (${pr.detail})` : ''), done: false, isProj: true }))
+    ].sort((a, b) => a.time.localeCompare(b.time));
+
+    const integratedEl = document.getElementById('integratedList');
+    integratedEl.innerHTML = combined.length === 0
+      ? `<li style="color:#888;">${t.noIntegrated}</li>`
+      : combined.map(item => `
+        <li>
+          <div>
+            <span class="tag ${item.isProj ? 'tag-proj' : 'tag-study'}">${item.time} · ${item.label}</span>
+            <span class="${item.done ? 'done-text' : ''}">${esc(item.text)}</span>
+          </div>
+        </li>
+      `).join('');
+  }
+
+  loadState();
+  render();
+</script>
+</body>
+</html>
