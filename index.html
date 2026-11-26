@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4단계 비전 보드</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+        .tab-btn { padding: 12px 24px; cursor: pointer; background: none; border: none; font-size: 16px; font-weight: bold; color: #7f8c8d; transition: all 0.3s; }
+        .tab-btn.active { color: #3498db; border-bottom: 3px solid #3498db; }
+        .vision-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr5)); gap: 20px; }
+        .vision-card { background: #fff; border: 1px solid #e1e8ed; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .vision-card h3 { margin-top: 0; color: #2980b9; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .sub-tabs { display: flex. margin-bottom: 15px; background: #ecf0f1; border-radius: 4px; overflow: hidden; }
+        .sub-tab-btn { flex: 1; padding: 8px; text-align: center; cursor: pointer; font-size: 13px; font-weight: bold; color: #555; border: none; background: none; }
+        .sub-tab-btn.active { background: #3498db; color: white; }
+        .sub-content { flex: 1; min-height: 120px; }
+        textarea { width: 100%; height: 100px; border: 1px solid #bdc3c7; border-radius: 4px; padding: 8px; box-sizing: border-box; resize: vertical; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active">1. 4단계 비전</button>
+    </div>
+
+    <div class="vision-grid">
+        <!-- 인생 비전 -->
+        <div class="vision-card">
+            <h3>인생 비전</h3>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" onclick="switchSubTab(this, 'life-add')">추가</button>
+                <button class="sub-tab-btn" onclick="switchSubTab(this, 'life-edit')">수정</button>
+                <button class="sub-tab-btn" onclick="switchSubTab(this, 'life-exec')">실행</button>
+            </div>
+            <div class="sub-content">
+                <div id="life-add" class="sub-pane"><textarea placeholder="새로운 인생 비전 추가..."></textarea></div>
+                <div id="life-edit" class="sub-pane" style="display:none;"><textarea placeholder="기존 인생 비전 수정..."></textarea></div>
+                <div id="life-exec" class="sub-pane" style="display:none;"><textarea placeholder="실행 계획 작성..."></textarea></div>
+            </div>
+        </div>
+
+        <!-- 10년 비전 -->
+        <div class="vision-card">
+            <h3>10년 비전</h3>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" onclick="switchSubTab(this, 'y10-add')">추가</button>
+                <button class="sub-tab-btn" onclick="switchSubTab(this, 'y10-edit')">수정</button>
+                <button class="sub-tab-btn" onclick="switchSubTab(this, 'y10-exec')">실행</button>
+            </div>
+            <div class="sub-content">
+                <div id="y10-add" class="sub-pane"><textarea placeholder="10년 후 목표 추가..."></textarea></div>
+                <div id="y10-edit" class="sub-pane" style="display:none;"><textarea placeholder="10년 후 목표 수정..."></textarea></div>
+                <div id="y10-exec" class="sub-pane" style="display:none;"><textarea placeholder="실행 계획 작성..."></textarea></div>
+            </div>
+        </div>
+
+        <!-- 3~5년 비전 -->
+        <div class="vision-card">
+            <h3>3~5년 비전</h3>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" onclick="switchSubTab(this, 'y35-add')">추가</button>
+                <button class="sub-tab-btn" onclick="switchSubTab(this, 'y35-edit')">수정</button>
+                <button class="sub-tab-btn" onclick="switchSubTab(this, 'y35-exec')">실행</button>
+            </div>
+            <div class="sub-content">
+                <div id="y35-add" class="sub-pane"><textarea placeholder="3~5년 중기 목표 추가..."></textarea></div>
+                <div id="y35-edit" class="sub-pane" style="display:none;"><textarea placeholder="3~5년 중기 목표 수정..."></textarea></div>
+                <div id="y35-exec" class="sub-pane" style="display:none;"><textarea placeholder="실행 계획 작성..."></textarea></div>
+            </div>
+        </div>
+
+        <!-- 1~2년 비전 -->
+        <div class="vision-card">
+            <h3>1~2년 비전</h3>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" onclick="switchSubTab(this, 'y12-add')">추가</button>
+                <button class="sub-tab-btn" onclick="switchSubTab(this, 'y12-edit')">수정</button>
+                <button class="sub-tab-btn" onclick="switchSubTab(this, 'y12-exec')">실행</button>
+            </div>
+            <div class="sub-content">
+                <div id="y12-add" class="sub-pane"><textarea placeholder="1~2년 단기 목표 추가..."></textarea></div>
+                <div id="y12-edit" class="sub-pane" style="display:none;"><textarea placeholder="1~2년 단기 목표 수정..."></textarea></div>
+                <div id="y12-exec" class="sub-pane" style="display:none;"><textarea placeholder="실행 계획 작성..."></textarea></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchSubTab(btn, targetId) {
+        const card = btn.closest('.vision-card');
+        card.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+        card.querySelectorAll('.sub-pane').forEach(p => p.style.display = 'none');
+        
+        btn.classList.add('active');
+        document.getElementById(targetId).style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
