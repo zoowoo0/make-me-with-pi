@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Making Me with Pi (MM)</title>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<style>
+  :root {
+    --primary: #5b2c83;
+    --primary-dark: #3d1c5a;
+    --gold: #f5a623;
+    --teal: #00897b;
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #222222;
+    --muted: #666666;
+    --border: #e0e4e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding-bottom: 50px; }
+  
+  header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff; padding: 16px 20px; display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 10px;
+  }
+  header h1 { font-size: 1.25rem; }
+  header .sub { font-size: 0.8rem; color: var(--gold); display: block; margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { background: rgba(255,255,255,0.18); padding: 6px 12px; border-radius: 20px; font-size: 0.82rem; }
+  
+  button {
+    cursor: pointer; border: none; border-radius: 8px; padding: 8px 13px;
+    font-weight: bold; font-size: 0.88rem; transition: 0.15s;
+  }
+  button:active { transform: scale(0.98); }
+  .btn-gold { background: var(--gold); color: #222; }
+  .btn-purple { background: var(--primary); color: #fff; }
+  .btn-teal { background: var(--teal); color: #fff; }
+  .btn-gray { background: #e2e8f0; color: #333; }
+  .btn-del { background: #e53935; color: #fff; padding: 4px 9px; font-size: 0.78rem; }
+  .btn-lang { background: #ffffff; color: var(--primary); border: 1px solid var(--gold); padding: 6px 10px; font-size: 0.82rem; }
+
+  nav.tabs {
+    display: flex; background: #fff; border-bottom: 2px solid var(--border);
+    position: sticky; top: 0; z-index: 20;
+  }
+  nav.tabs button {
+    flex: 1; background: transparent; color: var(--muted); border-radius: 0;
+    padding: 13px 6px; font-size: 0.9rem; border-bottom: 3px solid transparent;
+  }
+  nav.tabs button.active {
+    color: var(--primary); border-bottom-color: var(--primary); background: #faf7fc;
+  }
+
+  main { max-width: 860px; margin: 18px auto; padding: 0 14px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--card); border-radius: 12px; padding: 18px;
+    margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 1.05rem; color: var(--primary); margin-bottom: 10px;
+    border-left: 4px solid var(--gold); padding-left: 9px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+  }
+  .desc { font-size: 0.84rem; color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
+
+  .vision-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 10px; }
+  .v-box { background: #faf8fc; border: 1px solid #e6dcf0; border-radius: 10px; padding: 12px; }
+  .v-box h3 { font-size: 0.85rem; color: var(--primary); margin-bottom: 6px; }
+  .v-text { font-size: 0.9rem; min-height: 38px; color: #222; white-space: pre-wrap; margin-bottom: 8px; }
+  
+  input, select, textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid #cbd5e1; border-radius: 8px;
+    font-size: 0.92rem; margin-bottom: 8px;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .row > * { flex: 1; min-width: 110px; margin-bottom: 0; }
+
+  ul.list { list-style: none; margin-top: 10px; }
+  ul.list li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 8px; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;
+  }
+  .tag { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; background: #ede9fe; color: #5b2c83; font-weight: bold; }
+  .tag-study { background: #e0f2fe; color: #0369a1; }
+  .done-txt { text-decoration: line-through; color: #94a3b8; }
+
+  /* Calendar */
+  .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+  .cal-day-name { font-size: 0.78rem; font-weight: bold; color: var(--muted); padding: 4px 0; }
+  .cal-cell {
+    padding: 8px 2px; border: 1px solid #e2e8f0; border-radius: 6px;
+    background: #fff; cursor: pointer; font-size: 0.85rem; position: relative;
+  }
+  .cal-cell.selected { background: var(--primary); color: #fff; font-weight: bold; border-color: var(--primary); }
+  .cal-cell.has-dot::after {
+    content: ''; width: 5px; height: 5px; background: var(--gold);
+    border-radius: 50%; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+  }
+
+  /* Visual Briefing Prompter (Mobile Pi Browser Fallback + Desktop Sync) */
+  .prompter-box {
+    display: none; margin-top: 12px; padding: 16px; border-radius: 12px;
+    background: linear-gradient(135deg, #2e1065, #4c1d95); color: #fff;
+    border: 2px solid var(--gold); box-shadow: 0 4px 12px rgba(91,44,131,0.25);
+  }
+  .prompter-box.active { display: block; }
+  .prompter-badge {
+    display: inline-block; background: var(--gold); color: #222; font-size: 0.75rem;
+    font-weight: bold; padding: 3px 9px; border-radius: 12px; margin-bottom: 8px;
+  }
+  .prompter-line {
+    font-size: 1.08rem; font-weight: bold; line-height: 1.5; min-height: 54px;
+    padding: 8px 0; transition: opacity 0.25s;
+  }
+  .prompter-progress { height: 5px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .prompter-bar { height: 100%; background: var(--gold); width: 0%; transition: width 0.3s linear; }
+
+  /* Study & Table */
+  .study-banner {
+    background: #fefce8; border: 1px solid #fde047; padding: 10px 14px;
+    border-radius: 8px; font-size: 0.9rem; color: #854d0e; margin-bottom: 12px; font-weight: bold;
+  }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.88rem; }
+  th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: center; }
+  th { background: #f1f5f9; color: var(--primary); }
+
+  @media print {
+    header, nav.tabs, button, .no-print { display: none !important; }
+    body { background: #fff; padding: 0; }
+    .panel { display: block !important; }
+    #t2, #t3 { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #999; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Making Me with Pi (MM)</h1>
+    <span class="sub" data-i18n="subtitle">인생·10년·3~5년·1~2년 비전 → 큰 목표 → 월 달력 조절 → 일정표 & 스터디 연동</span>
+  </div>
+  <div class="header-right">
+    <button type="button" class="btn-lang" id="langToggleBtn" onclick="toggleLanguage()">EN / 한국어</button>
+    <span id="connStatus" class="badge" data-i18n="waiting">연결 대기 중</span>
+    <button type="button" class="btn-gold" onclick="connectPi()" data-i18n="piLogin">Pi 로그인 테스트 연결</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button type="button" class="tab-btn active" onclick="switchTab('t1', this)" data-i18n="tab1">1. 비전 & 큰 목표</button>
+  <button type="button" class="tab-btn" onclick="switchTab('t2', this)" data-i18n="tab2">2. 월 달력 · 일정 · 모닝</button>
+  <button type="button" class="tab-btn" onclick="switchTab('t3', this)" data-i18n="tab3">3. 스터디 방 & Pi 정산</button>
+</nav>
+
+<main>
+  <!-- TAB 1 -->
+  <section id="t1" class="panel active">
+    <div class="card">
+      <h2>
+        <span data-i18n="vTitle">비전 4단계 (인생 · 10년 · 3~5년 · 1~2년)</span>
+        <button type="button" class="btn-gray no-print" onclick="window.print()" data-i18n="printBtn">종이 출력지 인쇄</button>
+      </h2>
+      <p class="desc" data-i18n="vDesc">화면에 바로 표시되며, 각 카드의 [수정] 버튼을 누르면 직접 편집하고 저장할 수 있습니다.</p>
+      <div class="vision-grid" id="visionGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="bigGoalTitle">세부 큰 목표</h2>
+      <p class="desc" data-i18n="bigGoalDesc">시간 단위 쪼개기 대신 큰 단위로 입력하세요. (예: 1월 회계 기본 책 정독 1회·강의 듣기 1회, 1~4월 해상 교재 5회독)</p>
+      <div class="row no-print">
+        <input type="text" id="bgPeriod" data-ph="phPeriod" placeholder="큰 기간 (예: 1~4월)">
+        <input type="text" id="bgSubject" data-ph="phSubject" placeholder="과목/영역">
+        <input type="text" id="bgContent" data-ph="phContent" placeholder="큰 목표 내용">
+        <input type="date" id="bgDate">
+        <button type="button" class="btn-purple" onclick="addBigGoal()" data-i18n="addBigGoalBtn">큰 목표 추가</button>
+      </div>
+      <ul class="list" id="bigGoalList"></ul>
+    </div>
+  </section>
+
+  <!-- TAB 2 -->
+  <section id="t2" class="panel">
+    <div class="card">
+      <h2 data-i18n="calTitle">월 달력에서 세부 조절</h2>
+      <p class="desc" data-i18n="calDesc">날짜를 클릭해 선택하고 아래에서 일정을 추가하거나 [수정]할 수 있습니다. (시간 입력은 선택 사항)</p>
+      <div class="cal-head">
+        <button type="button" class="btn-gray" onclick="changeMonth(-1)" data-i18n="prevMonth">◀ 이전 달</button>
+        <strong id="calMonthLabel"></strong>
+        <button type="button" class="btn-gray" onclick="changeMonth(1)" data-i18n="nextMonth">다음 달 ▶</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2><span data-i18n="schedTitle">일정표</span> <span id="selectedDateBadge" class="tag"></span></h2>
+      <div class="row">
+        <input type="date" id="schDate">
+        <input type="text" id="schText" data-ph="phSchText" placeholder="일정 / 공부 내용">
+        <select id="schLink">
+          <option value="study" data-i18n="optStudy">스터디 상단에 표시</option>
+          <option value="normal" data-i18n="optNormal">일반 일정</option>
+        </select>
+        <input type="time" id="schTime" title="시간(선택)">
+        <button type="button" class="btn-teal" onclick="addSchedule()" data-i18n="addSchBtn">일정 추가</button>
+      </div>
+      <ul class="list" id="scheduleList"></ul>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="morningTitle">아침 모닝 브리핑 (음성 & 비주얼 프롬프터)</h2>
+      <div class="row">
+        <input type="text" id="goodMsg" data-ph="phGoodMsg" placeholder="좋은 메시지 (긍정 확언)">
+        <input type="text" id="memoMsg" data-ph="phMemoMsg" placeholder="오늘 외울 내용">
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <button type="button" class="btn-gray" onclick="saveMorning()" data-i18n="saveMorningBtn">문구 저장</button>
+        <button type="button" class="btn-purple" onclick="startBriefing()" data-i18n="playBriefBtn">브리핑 듣기 / 프롬프터 실행</button>
+        <button type="button" class="btn-del" style="padding:8px 13px;font-size:0.88rem;" onclick="stopBriefing()" data-i18n="stopBriefBtn">정지</button>
+      </div>
+
+      <!-- Visual Prompter for Mobile Pi Browser & Desktop -->
+      <div id="prompterBox" class="prompter-box">
+        <span class="prompter-badge" id="prompterModeBadge">VISUAL & AUDIO BRIEFING</span>
+        <div class="prompter-line" id="prompterLine"></div>
+        <div class="prompter-progress"><div class="prompter-bar" id="prompterBar"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3 -->
+  <section id="t3" class="panel">
+    <div class="study-banner" id="studyBanner"></div>
+
+    <div class="card">
+      <h2 data-i18n="studyRoomTitle">스터디 방 (개인 / 그룹) & 벌금·상금 정산</h2>
+      <div class="row" style="margin-bottom:12px;">
+        <button type="button" class="btn-purple" id="modeSoloBtn" onclick="setStudyMode('solo')" data-i18n="soloMode">개인 공부방</button>
+        <button type="button" class="btn-gray" id="modeGroupBtn" onclick="setStudyMode('group')" data-i18n="groupMode">그룹 공부방</button>
+      </div>
+
+      <div id="groupArea" style="display:none; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:12px;">
+        <div class="row" style="align-items:center;">
+          <div><strong data-i18n="inviteCodeLabel">그룹 초대 코드:</strong> <span class="tag">MM-GROUP-314</span></div>
+          <button type="button" class="btn-teal" onclick="copyInvite()" data-i18n="copyCodeBtn">초대 코드 복사</button>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <input type="text" id="chatInput" data-ph="phChat" placeholder="그룹 대화 메모 (현재 로컬 기록 · 실시간 다자간 채팅은 추후 DB 연동)">
+          <button type="button" class="btn-purple" onclick="addChat()" data-i18n="sendChatBtn">남기기</button>
+        </div>
+        <ul class="list" id="chatList"></ul>
+      </div>
+
+      <div class="row">
+        <input type="text" id="stName" data-ph="phStName" placeholder="이름/닉네임">
+        <input type="number" id="stMin" value="60" min="1" placeholder="공부 시간(분)">
+        <select id="stResult">
+          <option value="pass" data-i18n="optPass">달성 (+0.5 Pi 상금)</option>
+          <option value="fail" data-i18n="optFail">미달성 (-1.0 Pi 벌금)</option>
+        </select>
+        <button type="button" class="btn-gold" onclick="addStudyRecord()" data-i18n="recordBtn">기록 및 정산 반영</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="thUser">참여자</th>
+            <th data-i18n="thMin">공부시간</th>
+            <th data-i18n="thStatus">달성 여부</th>
+            <th data-i18n="thPi">벌금 / 상금</th>
+            <th data-i18n="thAction">정산</th>
+          </tr>
+        </thead>
+        <tbody id="studyTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+var STORE_KEY = 'mm_pi_upgraded_v1';
+var todayStr = new Date().toISOString().slice(0, 10);
+
+var state = {
+  lang: 'ko',
+  user: '',
+  visions: {
+    life: '나는 내 몸과 감정과 생각의 주인이 되어 원하는 나를 창조한다.',
+    y10: '경제적 자유와 전문성을 갖춘 자기주도적 리더',
+    y3: '핵심 자격 취득 및 안정적 시스템 구축',
+    y1: '매일 정·기·신 루틴 실천과 목표 100% 완수'
+  },
+  bigGoals: [],
+  schedules: [],
+  goodMsg: '오늘도 내 생각과 감정의 주인은 바로 나다.',
+  memoMsg: '핵심 원리를 정확히 이해하고 끝까지 완주한다.',
+  studyMode: 'solo',
+  chats: [],
+  records: []
+};
+
+var curYear = new Date().getFullYear();
+var curMonth = new Date().getMonth();
+var selectedDate = todayStr;
+var prompterTimer = null;
+
+var I18N = {
+  ko: {
+    subtitle: '인생·10년·3~5년·1~2년 비전 → 큰 목표 → 월 달력 조절 → 일정표 & 스터디 연동',
+    waiting: '연결 대기 중',
+    connected: '연결됨',
+    piLogin: 'Pi 로그인 테스트 연결',
+    tab1: '1. 비전 & 큰 목표',
+    tab2: '2. 월 달력 · 일정 · 모닝',
+    tab3: '3. 스터디 방 & Pi 정산',
+    vTitle: '비전 4단계 (인생 · 10년 · 3~5년 · 1~2년)',
+    printBtn: '종이 출력지 인쇄',
+    vDesc: '화면에 바로 표시되며, 각 카드의 [수정] 버튼을 누르면 직접 편집하고 저장할 수 있습니다.',
+    vLabels: { life: '인생 비전', y10: '10년 비전', y3: '3~5년 비전', y1: '1~2년 비전' },
+    editBtn: '수정',
+    saveBtn: '저장',
+    delBtn: '삭제',
+    bigGoalTitle: '세부 큰 목표',
+    bigGoalDesc: '시간 단위 쪼개기 대신 큰 단위로 입력하세요. (예: 1월 회계 기본 책 정독 1회·강의 듣기 1회, 1~4월 해상 교재 5회독)',
+    phPeriod: '큰 기간 (예: 1~4월)',
+    phSubject: '과목/영역',
+    phContent: '큰 목표 내용',
+    addBigGoalBtn: '큰 목표 추가',
+    calTitle: '월 달력에서 세부 조절',
+    calDesc: '날짜를 클릭해 선택하고 아래에서 일정을 추가하거나 [수정]할 수 있습니다. (시간 입력은 선택 사항)',
+    prevMonth: '◀ 이전 달',
+    nextMonth: '다음 달 ▶',
+    schedTitle: '일정표',
+    phSchText: '일정 / 공부 내용',
+    optStudy: '스터디 상단에 표시',
+    optNormal: '일반 일정',
+    addSchBtn: '일정 추가',
+    morningTitle: '아침 모닝 브리핑 (음성 & 비주얼 프롬프터)',
+    phGoodMsg: '좋은 메시지 (긍정 확언)',
+    phMemoMsg: '오늘 외울 내용',
+    saveMorningBtn: '문구 저장',
+    playBriefBtn: '브리핑 듣기 / 프롬프터 실행',
+    stopBriefBtn: '정지',
+    studyRoomTitle: '스터디 방 (개인 / 그룹) & 벌금·상금 정산',
+    soloMode: '개인 공부방',
+    groupMode: '그룹 공부방',
+    inviteCodeLabel: '그룹 초대 코드:',
+    copyCodeBtn: '초대 코드 복사',
+    phChat: '그룹 대화 메모 (현재 로컬 기록 · 실시간 다자간 채팅은 추후 DB 연동)',
+    sendChatBtn: '남기기',
+    phStName: '이름/닉네임',
+    optPass: '달성 (+0.5 Pi 상금)',
+    optFail: '미달성 (-1.0 Pi 벌금)',
+    recordBtn: '기록 및 정산 반영',
+    thUser: '참여자',
+    thMin: '공부시간',
+    thStatus: '달성 여부',
+    thPi: '벌금 / 상금',
+    thAction: '정산',
+    bannerPrefix: '스터디 상단 연동 목표: ',
+    bannerEmpty: '탭 2에서 [스터디 상단에 표시]로 등록된 목표가 없습니다.',
+    briefIntro: '좋은 아침입니다. 오늘의 모닝 브리핑을 시작합니다.',
+    briefVision: '나의 인생 비전: ',
+    briefGood: '오늘의 긍정 메시지: ',
+    briefMemo: '오늘 외울 핵심 문장: ',
+    briefSched: '오늘의 일정: ',
+    briefNoSched: '오늘 등록된 세부 일정이 없습니다.',
+    briefEnd: '오늘도 내 인생의 주인으로 멋진 하루 보내세요!',
+    modeVoice: '음성 + 비주얼 브리핑 실행 중',
+    modeVisual: '모바일 Pi Browser 최적화 비주얼 프롬프터 실행 중'
+  },
+  en: {
+    subtitle: 'Life·10Y·3-5Y·1-2Y Vision → Big Goals → Monthly Calendar → Schedule & Study Sync',
+    waiting: 'Waiting to Connect',
+    connected: 'Connected',
+    piLogin: 'Pi Login Test Connect',
+    tab1: '1. Vision & Big Goals',
+    tab2: '2. Calendar · Schedule · Morning',
+    tab3: '3. Study Room & Pi Settlement',
+    vTitle: '4-Stage Vision (Life · 10Y · 3-5Y · 1-2Y)',
+    printBtn: 'Print A4 Sheet',
+    vDesc: 'Displayed immediately. Click [Edit] on any card to modify and save your vision.',
+    vLabels: { life: 'Life Vision', y10: '10-Year Vision', y3: '3-5 Year Vision', y1: '1-2 Year Vision' },
+    editBtn: 'Edit',
+    saveBtn: 'Save',
+    delBtn: 'Delete',
+    bigGoalTitle: 'Detailed Big Goals',
+    bigGoalDesc: 'Enter macro goals instead of tiny hourly splits (e.g., Jan: Read textbook 1x, Jan-Apr: Review 5x).',
+    phPeriod: 'Period (e.g., Jan-Apr)',
+    phSubject: 'Subject / Area',
+    phContent: 'Big Goal Description',
+    addBigGoalBtn: 'Add Big Goal',
+    calTitle: 'Monthly Calendar Fine-Tuning',
+    calDesc: 'Click a date to select it, then add or edit schedules below. (Time is optional)',
+    prevMonth: '◀ Prev',
+    nextMonth: 'Next ▶',
+    schedTitle: 'Schedule',
+    phSchText: 'Schedule / Study Task',
+    optStudy: 'Pin to Study Top',
+    optNormal: 'General Schedule',
+    addSchBtn: 'Add Schedule',
+    morningTitle: 'Morning Briefing (Voice & Visual Prompter)',
+    phGoodMsg: 'Positive Affirmation Message',
+    phMemoMsg: 'Key Sentence to Memorize Today',
+    saveMorningBtn: 'Save Phrases',
+    playBriefBtn: 'Start Audio / Visual Briefing',
+    stopBriefBtn: 'Stop',
+    studyRoomTitle: 'Study Room (Solo / Group) & Pi Settlement',
+    soloMode: 'Solo Study Room',
+    groupMode: 'Group Study Room',
+    inviteCodeLabel: 'Group Invite Code:',
+    copyCodeBtn: 'Copy Code',
+    phChat: 'Group memo (Local log · Real-time multi-user DB coming soon)',
+    sendChatBtn: 'Post',
+    phStName: 'Name / Nickname',
+    optPass: 'Achieved (+0.5 Pi Reward)',
+    optFail: 'Missed (-1.0 Pi Penalty)',
+    recordBtn: 'Record & Settle',
+    thUser: 'Member',
+    thMin: 'Study Time',
+    thStatus: 'Status',
+    thPi: 'Penalty / Reward',
+    thAction: 'Action',
+    bannerPrefix: 'Pinned Study Goal: ',
+    bannerEmpty: 'No study goals pinned from Tab 2 yet.',
+    briefIntro: 'Good morning. Starting your daily briefing.',
+    briefVision: 'My Life Vision: ',
+    briefGood: 'Positive Affirmation: ',
+    briefMemo: 'Key Note to Memorize: ',
+    briefSched: 'Today Schedule: ',
+    briefNoSched: 'No specific tasks scheduled for today.',
+    briefEnd: 'Have a powerful day as the master of your life!',
+    modeVoice: 'Audio + Visual Briefing Active',
+    modeVisual: 'Mobile Pi Browser Visual Prompter Active'
+  }
+};
+
+function t(key) { return I18N[state.lang][key] || key; }
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if (raw) state = Object.assign(state, JSON.parse(raw));
+  } catch (e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+  renderAll();
+}
+
+function toggleLanguage() {
+  stopBriefing();
+  state.lang = state.lang === 'ko' ? 'en' : 'ko';
+  saveState();
+}
+
+function applyLanguageUI() {
+  document.documentElement.lang = state.lang;
+  document.getElementById('langToggleBtn').textContent = state.lang === 'ko' ? 'English (EN)' : '한국어 (KO)';
+  var els = document.querySelectorAll('[data-i18n]');
+  for (var i = 0; i < els.length; i++) {
+    var k = els[i].getAttribute('data-i18n');
+    if (I18N[state.lang][k]) els[i].textContent = I18N[state.lang][k];
+  }
+  var phs = document.querySelectorAll('[data-ph]');
+  for (var j = 0; j < phs.length; j++) {
+    var pk = phs[j].getAttribute('data-ph');
+    if (I18N[state.lang][pk]) phs[j].placeholder = I18N[state.lang][pk];
+  }
+}
+
+function switchTab(id, btn) {
+  var btns = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  for (var j = 0; j < panels.length; j++) panels[j].classList.remove('active');
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+try { if (window.Pi) window.Pi.init({ version: '2.0', sandbox: true }); } catch (e) {}
+
+function connectPi() {
+  if (window.Pi && typeof window.Pi.authenticate === 'function') {
+    window.Pi.authenticate(['username', 'payments'], function(){})
+      .then(function(auth) { state.user = '@' + auth.user.username; saveState(); })
+      .catch(function() { state.user = '@mm_solohost_user'; saveState(); });
+  } else {
+    state.user = '@mm_solohost_user';
+    saveState();
+  }
+}
+
+function editVision(key) {
+  var cur = state.visions[key] || '';
+  var next = prompt(t('vLabels')[key], cur);
+  if (next !== null) {
+    state.visions[key] = next.trim();
+    saveState();
+  }
+}
+
+function addBigGoal() {
+  var p = document.getElementById('bgPeriod').value.trim();
+  var s = document.getElementById('bgSubject').value.trim();
+  var c = document.getElementById('bgContent').value.trim();
+  var d = document.getElementById('bgDate').value;
+  if (!c) return;
+  state.bigGoals.push({ id: Date.now(), period: p, subject: s, content: c, date: d });
+  if (d) {
+    state.schedules.push({ id: Date.now() + 1, date: d, text: (s ? '['+s+'] ' : '') + c, link: 'study', time: '', done: false });
+  }
+  document.getElementById('bgPeriod').value = '';
+  document.getElementById('bgSubject').value = '';
+  document.getElementById('bgContent').value = '';
+  document.getElementById('bgDate').value = '';
+  saveState();
+}
+
+function delBigGoal(id) {
+  state.bigGoals = state.bigGoals.filter(function(g){ return g.id !== id; });
+  saveState();
+}
+
+function changeMonth(delta) {
+  curMonth += delta;
+  if (curMonth < 0) { curMonth = 11; curYear--; }
+  if (curMonth > 11) { curMonth = 0; curYear++; }
+  renderCalendar();
+}
+
+function selectDate(dateStr) {
+  selectedDate = dateStr;
+  document.getElementById('schDate').value = dateStr;
+  renderAll();
+}
+
+function addSchedule() {
+  var d = document.getElementById('schDate').value || selectedDate;
+  var tx = document.getElementById('schText').value.trim();
+  var lk = document.getElementById('schLink').value;
+  var tm = document.getElementById('schTime').value;
+  if (!tx) return;
+  state.schedules.push({ id: Date.now(), date: d, text: tx, link: lk, time: tm, done: false });
+  document.getElementById('schText').value = '';
+  document.getElementById('schTime').value = '';
+  selectedDate = d;
+  saveState();
+}
+
+function editSchedule(id) {
+  for (var i = 0; i < state.schedules.length; i++) {
+    if (state.schedules[i].id === id) {
+      var next = prompt(t('phSchText'), state.schedules[i].text);
+      if (next !== null && next.trim()) {
+        state.schedules[i].text = next.trim();
+        saveState();
+      }
+      break;
+    }
+  }
+}
+
+function toggleSchedule(id) {
+  for (var i = 0; i < state.schedules.length; i++) {
+    if (state.schedules[i].id === id) state.schedules[i].done = !state.schedules[i].done;
+  }
+  saveState();
+}
+
+function delSchedule(id) {
+  state.schedules = state.schedules.filter(function(s){ return s.id !== id; });
+  saveState();
+}
+
+function saveMorning() {
+  state.goodMsg = document.getElementById('goodMsg').value.trim();
+  state.memoMsg = document.getElementById('memoMsg').value.trim();
+  saveState();
+}
+
+/* Soft Chime using Web Audio API (Works on Mobile Pi Browser) */
+function playSoftChime() {
+  try {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    var ctx = new AudioCtx();
+    var notes = [523.25, 659.25, 783.99];
+    notes.forEach(function(freq, idx) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.14);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime + idx * 0.14);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.14 + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + idx * 0.14);
+      osc.stop(ctx.currentTime + idx * 0.14 + 0.55);
+    });
+  } catch (e) {}
+}
+
+function buildBriefingLines() {
+  var todayTasks = state.schedules.filter(function(s){ return s.date === selectedDate; });
+  var schedSummary = todayTasks.length > 0
+    ? todayTasks.map(function(s){ return (s.time ? s.time + ' ' : '') + s.text; }).join(', ')
+    : t('briefNoSched');
+
+  var lines = [
+    t('briefIntro'),
+    t('briefVision') + (state.visions.life || '-'),
+    t('briefGood') + (state.goodMsg || '-'),
+    t('briefMemo') + (state.memoMsg || '-'),
+    t('briefSched') + schedSummary,
+    t('briefEnd')
+  ];
+  return lines;
+}
+
+function startBriefing() {
+  stopBriefing();
+  saveMorning();
+  playSoftChime();
+
+  var lines = buildBriefingLines();
+  var box = document.getElementById('prompterBox');
+  var lineEl = document.getElementById('prompterLine');
+  var barEl = document.getElementById('prompterBar');
+  var badgeEl = document.getElementById('prompterModeBadge');
+
+  var hasTTS = ('speechSynthesis' in window) && typeof window.SpeechSynthesisUtterance === 'function';
+  badgeEl.textContent = hasTTS ? t('modeVoice') : t('modeVisual');
+  box.classList.add('active');
+
+  var idx = 0;
+  function showLine(i) {
+    if (i >= lines.length) {
+      barEl.style.width = '100%';
+      return;
+    }
+    lineEl.style.opacity = '0.2';
+    setTimeout(function() {
+      lineEl.textContent = lines[i];
+      lineEl.style.opacity = '1';
+      barEl.style.width = Math.round(((i + 1) / lines.length) * 100) + '%';
+    }, 120);
+  }
+
+  showLine(0);
+
+  if (hasTTS) {
+    try {
+      window.speechSynthesis.cancel();
+      var fullText = lines.join(' ');
+      var utter = new SpeechSynthesisUtterance(fullText);
+      utter.lang = state.lang === 'ko' ? 'ko-KR' : 'en-US';
+      utter.rate = 0.98;
+      window.speechSynthesis.speak(utter);
+    } catch (e) {}
+  }
+
+  prompterTimer = setInterval(function() {
+    idx++;
+    if (idx < lines.length) {
+      showLine(idx);
+    } else {
+      clearInterval(prompterTimer);
+      prompterTimer = null;
+    }
+  }, 3400);
+}
+
+function stopBriefing() {
+  if (prompterTimer) {
+    clearInterval(prompterTimer);
+    prompterTimer = null;
+  }
+  try {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  } catch (e) {}
+  document.getElementById('prompterBox').classList.remove('active');
+}
+
+function setStudyMode(mode) {
+  state.studyMode = mode;
+  saveState();
+}
+
+function copyInvite() {
+  var code = 'MM-GROUP-314';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).catch(function(){});
+  }
+  alert('Copied: ' + code);
+}
+
+function addChat() {
+  var tx = document.getElementById('chatInput').value.trim();
+  if (!tx) return;
+  var sender = state.user || 'Guest';
+  state.chats.push({ id: Date.now(), sender: sender, text: tx });
+  document.getElementById('chatInput').value = '';
+  saveState();
+}
+
+function addStudyRecord() {
+  var nm = document.getElementById('stName').value.trim() || state.user || 'Member';
+  var mn = parseInt(document.getElementById('stMin').value, 10) || 60;
+  var rs = document.getElementById('stResult').value;
+  var delta = rs === 'pass' ? 0.5 : -1.0;
+  state.records.push({ id: Date.now(), name: nm, min: mn, result: rs, delta: delta, settled: false });
+  document.getElementById('stName').value = '';
+  saveState();
+}
+
+function settleRecord(id) {
+  for (var i = 0; i < state.records.length; i++) {
+    if (state.records[i].id === id) {
+      var r = state.records[i];
+      if (r.delta < 0 && window.Pi && typeof window.Pi.createPayment === 'function') {
+        try {
+          window.Pi.createPayment({
+            amount: Math.abs(r.delta),
+            memo: 'Make Me with Pi Study Penalty',
+            metadata: { recordId: r.id }
+          }, {
+            onReadyForServerApproval: function(){},
+            onReadyForServerCompletion: function(){},
+            onCancel: function(){},
+            onError: function(){}
+          });
+        } catch (e) {}
+      }
+      r.settled = true;
+      break;
+    }
+  }
+  saveState();
+}
+
+function delRecord(id) {
+  state.records = state.records.filter(function(r){ return r.id !== id; });
+  saveState();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderCalendar() {
+  var label = document.getElementById('calMonthLabel');
+  label.textContent = curYear + ' - ' + String(curMonth + 1).padStart(2, '0');
+  var grid = document.getElementById('calGrid');
+  var days = state.lang === 'ko' ? ['일','월','화','수','목','금','토'] : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var html = days.map(function(d){ return '<div class="cal-day-name">' + d + '</div>'; }).join('');
+
+  var firstDay = new Date(curYear, curMonth, 1).getDay();
+  var lastDate = new Date(curYear, curMonth + 1, 0).getDate();
+
+  for (var e = 0; e < firstDay; e++) html += '<div></div>';
+  for (var d = 1; d <= lastDate; d++) {
+    var ds = curYear + '-' + String(curMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    var hasTask = state.schedules.some(function(s){ return s.date === ds; });
+    var cls = 'cal-cell' + (ds === selectedDate ? ' selected' : '') + (hasTask ? ' has-dot' : '');
+    html += '<div class="' + cls + '" onclick="selectDate('' + ds + '')">' + d + '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function renderAll() {
+  applyLanguageUI();
+
+  document.getElementById('connStatus').textContent = state.user ? (state.user + ' (' + t('connected') + ')') : t('waiting');
+
+  // Visions
+  var vKeys = ['life', 'y10', 'y3', 'y1'];
+  var vHtml = '';
+  for (var i = 0; i < vKeys.length; i++) {
+    var k = vKeys[i];
+    vHtml += '<div class="v-box"><h3>' + t('vLabels')[k] + '</h3>';
+    vHtml += '<div class="v-text">' + esc(state.visions[k] || '') + '</div>';
+    vHtml += '<button type="button" class="btn-gray no-print" onclick="editVision('' + k + '')">' + t('editBtn') + '</button></div>';
+  }
+  document.getElementById('visionGrid').innerHTML = vHtml;
+
+  // Big Goals
+  var bgHtml = '';
+  for (var g = 0; g < state.bigGoals.length; g++) {
+    var item = state.bigGoals[g];
+    bgHtml += '<li><div>';
+    if (item.period) bgHtml += '<span class="tag">' + esc(item.period) + '</span> ';
+    if (item.subject) bgHtml += '<strong>[' + esc(item.subject) + ']</strong> ';
+    bgHtml += esc(item.content);
+    if (item.date) bgHtml += ' <small style="color:#666">(' + item.date + ')</small>';
+    bgHtml += '</div><button type="button" class="btn-del no-print" onclick="delBigGoal(' + item.id + ')">' + t('delBtn') + '</button></li>';
+  }
+  document.getElementById('bigGoalList').innerHTML = bgHtml;
+
+  // Calendar & Schedules
+  renderCalendar();
+  document.getElementById('selectedDateBadge').textContent = selectedDate;
+  if (!document.getElementById('schDate').value) document.getElementById('schDate').value = selectedDate;
+
+  var filtered = state.schedules.filter(function(s){ return s.date === selectedDate; });
+  var scHtml = '';
+  for (var s = 0; s < filtered.length; s++) {
+    var sc = filtered[s];
+    scHtml += '<li><div><input type="checkbox" ' + (sc.done ? 'checked' : '') + ' onchange="toggleSchedule(' + sc.id + ')"> ';
+    if (sc.time) scHtml += '<span class="tag">' + sc.time + '</span> ';
+    if (sc.link === 'study') scHtml += '<span class="tag tag-study">Study</span> ';
+    scHtml += '<span class="' + (sc.done ? 'done-txt' : '') + '">' + esc(sc.text) + '</span></div>';
+    scHtml += '<div><button type="button" class="btn-gray" style="padding:4px 8px;font-size:0.78rem;margin-right:4px;" onclick="editSchedule(' + sc.id + ')">' + t('editBtn') + '</button>';
+    scHtml += '<button type="button" class="btn-del" onclick="delSchedule(' + sc.id + ')">' + t('delBtn') + '</button></div></li>';
+  }
+  document.getElementById('scheduleList').innerHTML = scHtml;
+
+  // Morning inputs
+  document.getElementById('goodMsg').value = state.goodMsg || '';
+  document.getElementById('memoMsg').value = state.memoMsg || '';
+
+  // Study Banner & Room
+  var pinned = state.schedules.filter(function(s){ return s.link === 'study' && !s.done; });
+  document.getElementById('studyBanner').textContent = pinned.length > 0
+    ? t('bannerPrefix') + pinned.map(function(p){ return p.text; }).join(' / ')
+    : t('bannerEmpty');
+
+  document.getElementById('modeSoloBtn').className = state.studyMode === 'solo' ? 'btn-purple' : 'btn-gray';
+  document.getElementById('modeGroupBtn').className = state.studyMode === 'group' ? 'btn-purple' : 'btn-gray';
+  document.getElementById('groupArea').style.display = state.studyMode === 'group' ? 'block' : 'none';
+
+  document.getElementById('chatList').innerHTML = state.chats.map(function(c){
+    return '<li><div><strong>' + esc(c.sender) + ':</strong> ' + esc(c.text) + '</div></li>';
+  }).join('');
+
+  var tbHtml = '';
+  for (var r = 0; r < state.records.length; r++) {
+    var rec = state.records[r];
+    var statusTxt = rec.result === 'pass' ? (state.lang === 'ko' ? '달성' : 'Pass') : (state.lang === 'ko' ? '미달성' : 'Missed');
+    var piTxt = (rec.delta > 0 ? '+' : '') + rec.delta.toFixed(1) + ' Pi';
+    tbHtml += '<tr><td>' + esc(rec.name) + '</td><td>' + rec.min + 'm</td><td>' + statusTxt + '</td><td><strong>' + piTxt + '</strong></td><td>';
+    if (!rec.settled) {
+      tbHtml += '<button type="button" class="btn-teal" style="padding:4px 8px;font-size:0.78rem;margin-right:4px;" onclick="settleRecord(' + rec.id + ')">' + (state.lang === 'ko' ? '정산' : 'Settle') + '</button>';
+    } else {
+      tbHtml += '<span class="tag">OK</span> ';
+    }
+    tbHtml += '<button type="button" class="btn-del" onclick="delRecord(' + rec.id + ')">' + t('delBtn') + '</button></td></tr>';
+  }
+  document.getElementById('studyTableBody').innerHTML = tbHtml;
+}
+
+loadState();
+renderAll();
+</script>
+</body>
+</html>
