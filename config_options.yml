@@ -1,0 +1,4 @@
+app_name: "Make Me with Pi (MM)"
+description: "정·기·신(精·氣·神) 조화를 통한 비전·다이어리·A4 출력, 열품타 스터디 방 및 Pi 정산, 프로젝트·일정표·TTS 모닝 브리핑 통합 자기관리 앱"
+version: "1.0.0"
+default_port: 8080

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Make Me with Pi (MM)</title>
+<style>
+  :root {
+    --purple: #5b2c83;
+    --purple-dark: #3d1c5a;
+    --gold: #f5a623;
+    --teal: #00897b;
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #222222;
+    --border: #e0e4e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding-bottom: 50px; }
+  header {
+    background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+    color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+  }
+  header h1 { font-size: 1.25rem; }
+  header small { color: var(--gold); display: block; font-size: 0.8rem; margin-top: 2px; }
+  .auth-box { display: flex; align-items: center; gap: 8px; }
+  .badge-user { background: rgba(255,255,255,0.18); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; }
+  button { cursor: pointer; border: none; border-radius: 8px; padding: 9px 14px; font-weight: bold; font-size: 0.9rem; transition: 0.15s; }
+  button:hover { opacity: 0.9; }
+  .btn-gold { background: var(--gold); color: #222; }
+  .btn-purple { background: var(--purple); color: #fff; }
+  .btn-teal { background: var(--teal); color: #fff; }
+  .btn-gray { background: #607d8b; color: #fff; }
+  .btn-del { background: #e53935; color: #fff; padding: 5px 10px; font-size: 0.8rem; }
+
+  nav.tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 10; }
+  nav.tabs button {
+    flex: 1; background: none; color: #666; border-radius: 0; padding: 14px 6px; font-size: 0.92rem; border-bottom: 3px solid transparent;
+  }
+  nav.tabs button.active { color: var(--purple); border-bottom-color: var(--purple); background: #faf7fc; }
+
+  main { max-width: 840px; margin: 20px auto; padding: 0 15px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card { background: var(--card); border-radius: 12px; padding: 18px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+  .card h2 { font-size: 1.05rem; color: var(--purple); margin-bottom: 12px; border-left: 4px solid var(--gold); padding-left: 8px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  label { display: block; font-size: 0.82rem; font-weight: bold; color: #444; margin-bottom: 4px; }
+  input[type="text"], input[type="time"], input[type="number"], select, textarea {
+    width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .row input, .row select { flex: 1; min-width: 110px; margin-bottom: 0; }
+
+  ul.list { list-style: none; margin-top: 10px; }
+  ul.list li {
+    display: flex; justify-content: space-between; align-items: center; padding: 10px 12px;
+    background: #f9fafb; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; gap: 10px;
+  }
+  .done { text-decoration: line-through; color: #999; }
+  .tag { font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; background: #e8eaf6; color: #3f51b5; font-weight: bold; margin-right: 6px; }
+  .tag-proj { background: #e0f2f1; color: #00695c; }
+  .timer-box { text-align: center; padding: 16px; background: #faf7fc; border-radius: 10px; border: 1px dashed var(--purple); margin-bottom: 12px; }
+  .timer-display { font-size: 2.2rem; font-weight: bold; color: var(--purple); margin: 8px 0; font-variant-numeric: tabular-nums; }
+
+  @media print {
+    header, nav.tabs, .no-print, button { display: none !important; }
+    body { background: #fff; padding: 0; }
+    main { max-width: 100%; margin: 0; padding: 0; }
+    .panel { display: block !important; }
+    #t2, #t3, #t4 { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #bbb; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Make Me with Pi (MM)</h1>
+    <small>정·기·신 3대 바디 의식적 조절 & 자기창조 시스템</small>
+  </div>
+  <div class="auth-box">
+    <span id="userBadge" class="badge-user">게스트 상태</span>
+    <button type="button" class="btn-gold" onclick="loginPi()">Pi 로그인</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button type="button" class="tab active" onclick="openTab('t1', this)">1. 정·기·신 다이어리</button>
+  <button type="button" class="tab" onclick="openTab('t2', this)">2. 열품타 스터디</button>
+  <button type="button" class="tab" onclick="openTab('t3', this)">3. 프로젝트 방</button>
+  <button type="button" class="tab" onclick="openTab('t4', this)">4. 통합 일정표 & 브리핑</button>
+</nav>
+
+<main>
+  <!-- 탭 1 -->
+  <section id="t1" class="panel active">
+    <div class="card">
+      <h2>나의 인생 비전 & 오늘의 정·기·신 상태</h2>
+      <label>궁극적 비전 선언</label>
+      <input type="text" id="inVision" placeholder="예: 나는 내 몸과 감정과 생각의 주인이다.">
+      <div class="grid-3">
+        <div>
+          <label>신(神 · 정보/사고)</label>
+          <input type="text" id="inSin" placeholder="오늘 입력할 고급 정보">
+        </div>
+        <div>
+          <label>기(氣 · 감정/흐름)</label>
+          <input type="text" id="inGi" placeholder="감정/호흡 루틴">
+        </div>
+        <div>
+          <label>정(精 · 신체/행동)</label>
+          <input type="text" id="inJeong" placeholder="운동/실천 행동">
+        </div>
+      </div>
+      <div class="row no-print">
+        <button type="button" class="btn-purple" onclick="saveBio()">비전 & 정·기·신 저장</button>
+        <button type="button" class="btn-gray" onclick="window.print()">A4 다이어리 인쇄</button>
+        <span id="saveMsg" style="color:#00897b; font-weight:bold;"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>오늘의 공부 · 실천 계획 (탭 2·4 자동 연동)</h2>
+      <div class="row no-print">
+        <input type="time" id="inTime" value="09:00" style="max-width:130px;">
+        <select id="inType" style="max-width:120px;">
+          <option value="공부">공부 계획</option>
+          <option value="실천">일반 실천</option>
+        </select>
+        <input type="text" id="inText" placeholder="할 일을 입력하세요">
+        <button type="button" class="btn-teal" onclick="addPlan()">추가</button>
+      </div>
+      <ul id="listPlan" class="list"></ul>
+    </div>
+  </section>
+
+  <!-- 탭 2 -->
+  <section id="t2" class="panel">
+    <div class="card">
+      <h2>열품타 집중 스톱워치</h2>
+      <div class="timer-box">
+        <div style="font-size:0.85rem; color:#666;">오늘의 순수 집중 공부 시간</div>
+        <div id="timerText" class="timer-display">00:00:00</div>
+        <div class="row" style="justify-content:center; margin-bottom:0;">
+          <button type="button" class="btn-teal" onclick="startTimer()">시작</button>
+          <button type="button" class="btn-gold" onclick="pauseTimer()">일시정지</button>
+          <button type="button" class="btn-gray" onclick="resetTimer()">초기화</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>오늘의 연동된 공부 목표 & Pi 벌금 정산</h2>
+      <ul id="listStudy" class="list"></ul>
+      <div class="row" style="margin-top:12px;">
+        <label style="margin:0;">미달성 1건당 벌금(Pi):</label>
+        <input type="number" id="inPenaltyRate" value="1" min="0" step="0.5" style="max-width:90px;" onchange="render()">
+        <span id="txtPenalty" style="font-weight:bold; color:#5b2c83;"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 탭 3 -->
+  <section id="t3" class="panel">
+    <div class="card">
+      <h2>프로젝트 일정 등록 (탭 4 자동 연동)</h2>
+      <div class="row">
+        <input type="time" id="prTime" value="14:00" style="max-width:130px;">
+        <input type="text" id="prTitle" placeholder="프로젝트명">
+        <input type="text" id="prDesc" placeholder="참여 인원 및 실행 내용">
+        <button type="button" class="btn-purple" onclick="addProj()">등록</button>
+      </div>
+      <ul id="listProj" class="list"></ul>
+    </div>
+  </section>
+
+  <!-- 탭 4 -->
+  <section id="t4" class="panel">
+    <div class="card">
+      <h2>아침 모닝 브리핑 (음성 TTS)</h2>
+      <label>긍정 확언 & 오늘 외울 암기 문장</label>
+      <textarea id="inMorningNote" rows="2" placeholder="예: 나는 매일 성장한다. 오늘 핵심 암기 문장을 3번 복창하자."></textarea>
+      <div class="row">
+        <button type="button" class="btn-purple" onclick="saveMorning()">문구 저장</button>
+        <button type="button" class="btn-teal" onclick="speakBriefing()">브리핑 음성 듣기</button>
+        <button type="button" class="btn-gray" onclick="stopBriefing()">음성 정지</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>통합 자동 일정표 (시간순 자동 취합)</h2>
+      <ul id="listAll" class="list"></ul>
+    </div>
+  </section>
+</main>
+
+<script>
+var KEY = 'mm_pi_master_v1';
+var state = {
+  user: '',
+  vision: '',
+  sin: '',
+  gi: '',
+  jeong: '',
+  morningNote: '',
+  seconds: 0,
+  plans: [],
+  projs: []
+};
+var timerInterval = null;
+
+function load() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) state = Object.assign(state, JSON.parse(raw));
+  } catch (e) {}
+}
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  render();
+}
+
+function openTab(id, btn) {
+  var tabs = document.querySelectorAll('.tab');
+  var panels = document.querySelectorAll('.panel');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  for (var j = 0; j < panels.length; j++) panels[j].classList.remove('active');
+  btn.classList.add('active');
+  var target = document.getElementById(id);
+  if (target) target.classList.add('active');
+}
+
+function loginPi() {
+  if (window.Pi && typeof window.Pi.authenticate === 'function') {
+    try {
+      window.Pi.init({ version: '2.0', sandbox: true });
+      window.Pi.authenticate(['username', 'payments'], function(){})
+        .then(function(auth) { state.user = '@' + auth.user.username; save(); })
+        .catch(function() { state.user = '@mm_solohost_user'; save(); });
+    } catch (e) {
+      state.user = '@mm_solohost_user';
+      save();
+    }
+  } else {
+    state.user = '@mm_solohost_user';
+    save();
+  }
+}
+
+function saveBio() {
+  state.vision = document.getElementById('inVision').value;
+  state.sin = document.getElementById('inSin').value;
+  state.gi = document.getElementById('inGi').value;
+  state.jeong = document.getElementById('inJeong').value;
+  save();
+  var m = document.getElementById('saveMsg');
+  m.textContent = '저장 완료!';
+  setTimeout(function() { m.textContent = ''; }, 2000);
+}
+
+function addPlan() {
+  var t = document.getElementById('inTime').value || '09:00';
+  var tp = document.getElementById('inType').value;
+  var tx = document.getElementById('inText').value.trim();
+  if (!tx) { alert('할 일을 입력하세요.'); return; }
+  state.plans.push({ id: Date.now(), time: t, type: tp, text: tx, done: false });
+  document.getElementById('inText').value = '';
+  save();
+}
+
+function togglePlan(id) {
+  for (var i = 0; i < state.plans.length; i++) {
+    if (state.plans[i].id === id) state.plans[i].done = !state.plans[i].done;
+  }
+  save();
+}
+
+function delPlan(id) {
+  state.plans = state.plans.filter(function(p) { return p.id !== id; });
+  save();
+}
+
+function addProj() {
+  var t = document.getElementById('prTime').value || '14:00';
+  var tl = document.getElementById('prTitle').value.trim();
+  var ds = document.getElementById('prDesc').value.trim();
+  if (!tl) { alert('프로젝트명을 입력하세요.'); return; }
+  state.projs.push({ id: Date.now(), time: t, title: tl, desc: ds });
+  document.getElementById('prTitle').value = '';
+  document.getElementById('prDesc').value = '';
+  save();
+}
+
+function delProj(id) {
+  state.projs = state.projs.filter(function(p) { return p.id !== id; });
+  save();
+}
+
+function formatTime(sec) {
+  var h = Math.floor(sec / 3600);
+  var m = Math.floor((sec % 3600) / 60);
+  var s = sec % 60;
+  return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+}
+
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(function() {
+    state.seconds++;
+    document.getElementById('timerText').textContent = formatTime(state.seconds);
+    if (state.seconds % 5 === 0) {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  save();
+}
+
+function resetTimer() {
+  pauseTimer();
+  state.seconds = 0;
+  save();
+}
+
+function saveMorning() {
+  state.morningNote = document.getElementById('inMorningNote').value;
+  save();
+  alert('브리핑 문구가 저장되었습니다.');
+}
+
+function speakBriefing() {
+  if (!('speechSynthesis' in window)) {
+    alert('이 브라우저는 음성 합성을 지원하지 않습니다.');
+    return;
+  }
+  window.speechSynthesis.cancel();
+  var text = '좋은 아침입니다. Make Me with Pi 모닝 브리핑입니다. ';
+  if (state.vision) text += '오늘의 비전은 ' + state.vision + ' 입니다. ';
+  if (state.morningNote) text += state.morningNote + '. ';
+  var all = getCombinedSchedule();
+  if (all.length > 0) {
+    text += '오늘 예정된 일정은 총 ' + all.length + '건입니다. ';
+    for (var i = 0; i < all.length; i++) {
+      text += all[i].time + ', ' + all[i].text + '. ';
+    }
+  } else {
+    text += '현재 등록된 일정이 없습니다.';
+  }
+  var utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ko-KR';
+  utter.rate = 1.0;
+  window.speechSynthesis.speak(utter);
+}
+
+function stopBriefing() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function getCombinedSchedule() {
+  var all = [];
+  for (var a = 0; a < state.plans.length; a++) {
+    all.push({ time: state.plans[a].time, tag: state.plans[a].type, text: state.plans[a].text, isProj: false });
+  }
+  for (var b = 0; b < state.projs.length; b++) {
+    all.push({ time: state.projs[b].time, tag: '프로젝트', text: state.projs[b].title + (state.projs[b].desc ? ' - ' + state.projs[b].desc : ''), isProj: true });
+  }
+  all.sort(function(x, y) { return x.time.localeCompare(y.time); });
+  return all;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function render() {
+  document.getElementById('userBadge').textContent = state.user ? state.user + ' 로그인됨' : '게스트 상태';
+  document.getElementById('inVision').value = state.vision;
+  document.getElementById('inSin').value = state.sin;
+  document.getElementById('inGi').value = state.gi;
+  document.getElementById('inJeong').value = state.jeong;
+  document.getElementById('inMorningNote').value = state.morningNote;
+  document.getElementById('timerText').textContent = formatTime(state.seconds);
+
+  var hPlan = '';
+  for (var i = 0; i < state.plans.length; i++) {
+    var p = state.plans[i];
+    hPlan += '<li><div><input type="checkbox" ' + (p.done ? 'checked' : '') + ' onchange="togglePlan(' + p.id + ')"> ';
+    hPlan += '<span class="tag">' + p.time + ' · ' + p.type + '</span>';
+    hPlan += '<span class="' + (p.done ? 'done' : '') + '">' + esc(p.text) + '</span></div>';
+    hPlan += '<button type="button" class="btn-del no-print" onclick="delPlan(' + p.id + ')">삭제</button></li>';
+  }
+  document.getElementById('listPlan').innerHTML = hPlan || '<li style="color:#888">등록된 계획이 없습니다.</li>';
+
+  var studies = state.plans.filter(function(p) { return p.type === '공부'; });
+  var hStudy = '';
+  var undone = 0;
+  for (var j = 0; j < studies.length; j++) {
+    var s = studies[j];
+    if (!s.done) undone++;
+    hStudy += '<li><div><span class="tag">' + s.time + '</span><span class="' + (s.done ? 'done' : '') + '">' + esc(s.text) + '</span></div>';
+    hStudy += '<span>' + (s.done ? '달성 완료' : '진행 중') + '</span></li>';
+  }
+  document.getElementById('listStudy').innerHTML = hStudy || '<li style="color:#888">탭 1에서 공부 계획을 추가하면 자동 표시됩니다.</li>';
+  var rate = parseFloat(document.getElementById('inPenaltyRate').value) || 0;
+  document.getElementById('txtPenalty').textContent = '공부 ' + studies.length + '건 중 미달성 ' + undone + '건 (예상 벌금: ' + (undone * rate) + ' Pi)';
+
+  var hProj = '';
+  for (var k = 0; k < state.projs.length; k++) {
+    var pr = state.projs[k];
+    hProj += '<li><div><span class="tag tag-proj">' + pr.time + '</span><strong>' + esc(pr.title) + '</strong> ' + esc(pr.desc) + '</div>';
+    hProj += '<button type="button" class="btn-del" onclick="delProj(' + pr.id + ')">삭제</button></li>';
+  }
+  document.getElementById('listProj').innerHTML = hProj || '<li style="color:#888">등록된 프로젝트가 없습니다.</li>';
+
+  var all = getCombinedSchedule();
+  var hAll = '';
+  for (var c = 0; c < all.length; c++) {
+    hAll += '<li><div><span class="tag ' + (all[c].isProj ? 'tag-proj' : '') + '">' + all[c].time + ' · ' + all[c].tag + '</span>' + esc(all[c].text) + '</div></li>';
+  }
+  document.getElementById('listAll').innerHTML = hAll || '<li style="color:#888">등록된 통합 일정이 없습니다.</li>';
+}
+
+load();
+render();
+</script>
+</body>
+</html>
