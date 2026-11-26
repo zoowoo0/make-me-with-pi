@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Make Me with Pi (MM)</title>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<style>
+:root {
+  --purple: #5b2c83;
+  --purple-dark: #3d1c5a;
+  --gold: #f5a623;
+  --teal: #00897b;
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --text: #222222;
+  --border: #e0e4e8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif; }
+body { background: var(--bg); color: var(--text); padding-bottom: 50px; }
+header {
+  background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+  color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+}
+header h1 { font-size: 1.25rem; }
+header small { color: var(--gold); display: block; font-size: 0.8rem; margin-top: 2px; }
+.auth-box { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.badge-user { background: rgba(255, 255, 255, 0.18); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; }
+button { cursor: pointer; border: none; border-radius: 8px; padding: 9px 14px; font-weight: bold; font-size: 0.9rem; transition: 0.15s; }
+button:hover { opacity: 0.9; }
+.btn-gold { background: var(--gold); color: #222; }
+.btn-purple { background: var(--purple); color: #fff; }
+.btn-teal { background: var(--teal); color: #fff; }
+.btn-gray { background: #607d8b; color: #fff; }
+.btn-lang { background: rgba(255, 255, 255, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.4); padding: 7px 12px; font-size: 0.85rem; }
+.btn-del { background: #e53935; color: #fff; padding: 5px 10px; font-size: 0.8rem; }
+.btn-edit-sm { background: #eceff1; color: #37474f; border: 1px solid #cfd8dc; padding: 3px 8px; font-size: 0.75rem; border-radius: 6px; margin-left: 8px; }
+nav.tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 10; }
+nav.tabs button {
+  flex: 1; background: none; color: #666; border-radius: 0; padding: 14px 6px; font-size: 0.92rem; border-bottom: 3px solid transparent;
+}
+nav.tabs button.active { color: var(--purple); border-bottom-color: var(--purple); background: #faf7fc; }
+main { max-width: 840px; margin: 20px auto; padding: 0 15px; }
+.panel { display: none; }
+.panel.active { display: block; }
+.card { background: var(--card); border-radius: 12px; padding: 18px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); border: 1px solid var(--border); }
+.card h2 { font-size: 1.05rem; color: var(--purple); margin-bottom: 12px; border-left: 4px solid var(--gold); padding-left: 8px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; }
+label { display: block; font-size: 0.82rem; font-weight: bold; color: #444; margin-bottom: 4px; }
+input[type="text"], input[type="time"], input[type="number"], select, textarea {
+  width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px;
+}
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.row input, .row select { flex: 1; min-width: 110px; margin-bottom: 0; }
+.vision-item {
+  background: #faf7fc; border: 1px solid #e6dcf0; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+}
+.vision-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.vision-title { font-size: 0.82rem; font-weight: bold; color: var(--purple); }
+.vision-display { font-size: 0.95rem; color: #222; word-break: keep-all; }
+.vision-empty { color: #888; font-size: 0.88rem; }
+ul.list { list-style: none; margin-top: 10px; }
+ul.list li {
+  display: flex; justify-content: space-between; align-items: center; padding: 10px 12px;
+  background: #f9fafb; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; gap: 10px;
+}
+.done { text-decoration: line-through; color: #999; }
+.tag { font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; background: #e8eaf6; color: #3f51b5; font-weight: bold; margin-right: 6px; }
+.tag-proj { background: #e0f2f1; color: #00695c; }
+.timer-box { text-align: center; padding: 16px; background: #faf7fc; border-radius: 10px; border: 1px dashed var(--purple); margin-bottom: 12px; }
+.timer-display { font-size: 2.2rem; font-weight: bold; color: var(--purple); margin: 8px 0; font-variant-numeric: tabular-nums; }
+.prompter-box {
+  display: none; margin-top: 12px; padding: 16px; border-radius: 10px;
+  background: linear-gradient(135deg, #2c1642, #4a236b); color: #fff; text-align: center;
+}
+.prompter-step { font-size: 0.78rem; color: var(--gold); margin-bottom: 6px; }
+.prompter-line { font-size: 1.05rem; font-weight: bold; line-height: 1.5; min-height: 3em; display: flex; align-items: center; justify-content: center; }
+@media print {
+  header, nav.tabs, .no-print, button, .btn-edit-sm { display: none !important; }
+  body { background: #fff; padding: 0; }
+  main { max-width: 100%; margin: 0; padding: 0; }
+  .panel { display: block !important; }
+  #t2, #t3, #t4 { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #bbb; break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Make Me with Pi (MM)</h1>
+    <small id="txtSubTitle">정·기·신 3대 바디 의식적 조절 & 자기창조 시스템</small>
+  </div>
+  <div class="auth-box">
+    <button type="button" id="btnLang" class="btn-lang" onclick="toggleLang()">English</button>
+    <span id="userBadge" class="badge-user">게스트 상태</span>
+    <button type="button" id="btnAuth" class="btn-gold" onclick="handleAuthClick()">Pi 로그인</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button type="button" id="tabBtn1" class="tab active" onclick="openTab('t1', this)">1. 정·기·신 다이어리</button>
+  <button type="button" id="tabBtn2" class="tab" onclick="openTab('t2', this)">2. 열품타 스터디</button>
+  <button type="button" id="tabBtn3" class="tab" onclick="openTab('t3', this)">3. 프로젝트 방</button>
+  <button type="button" id="tabBtn4" class="tab" onclick="openTab('t4', this)">4. 통합 일정표 & 브리핑</button>
+</nav>
+
+<main>
+  <!-- 탭 1 -->
+  <section id="t1" class="panel active">
+    <div class="card">
+      <h2 id="hVision">4단계 비전 & 오늘의 정·기·신 상태</h2>
+
+      <!-- 인생 비전 -->
+      <div class="vision-item">
+        <div class="vision-header">
+          <span id="lblLifeVision" class="vision-title">인생 비전</span>
+          <button type="button" id="btnEditLife" class="btn-edit-sm no-print" onclick="toggleVisionEdit('life')">수정</button>
+        </div>
+        <div id="dispLifeVision" class="vision-display"></div>
+        <div id="editBoxLife" class="row no-print" style="margin-top:6px; margin-bottom:0; display:none;">
+          <input type="text" id="inLifeVision" placeholder="예: 나는 내 몸과 감정과 생각의 주인이다.">
+          <button type="button" id="btnSaveLife" class="btn-purple" style="padding:8px 12px;" onclick="saveSingleVision('life')">확인</button>
+        </div>
+      </div>
+
+      <!-- 10년 비전 -->
+      <div class="vision-item">
+        <div class="vision-header">
+          <span id="lblTenVision" class="vision-title">10년 비전</span>
+          <button type="button" id="btnEditTen" class="btn-edit-sm no-print" onclick="toggleVisionEdit('ten')">수정</button>
+        </div>
+        <div id="dispTenVision" class="vision-display"></div>
+        <div id="editBoxTen" class="row no-print" style="margin-top:6px; margin-bottom:0; display:none;">
+          <input type="text" id="inTenVision" placeholder="10년 후 내가 이루고 싶은 모습">
+          <button type="button" id="btnSaveTen" class="btn-purple" style="padding:8px 12px;" onclick="saveSingleVision('ten')">확인</button>
+        </div>
+      </div>
+
+      <!-- 3~5년 비전 -->
+      <div class="vision-item">
+        <div class="vision-header">
+          <span id="lblMidVision" class="vision-title">3~5년 비전</span>
+          <button type="button" id="btnEditMid" class="btn-edit-sm no-print" onclick="toggleVisionEdit('mid')">수정</button>
+        </div>
+        <div id="dispMidVision" class="vision-display"></div>
+        <div id="editBoxMid" class="row no-print" style="margin-top:6px; margin-bottom:0; display:none;">
+          <input type="text" id="inMidVision" placeholder="3~5년 내 달성할 중기 비전">
+          <button type="button" id="btnSaveMid" class="btn-purple" style="padding:8px 12px;" onclick="saveSingleVision('mid')">확인</button>
+        </div>
+      </div>
+
+      <!-- 1~2년 비전 -->
+      <div class="vision-item">
+        <div class="vision-header">
+          <span id="lblShortVision" class="vision-title">1~2년 비전</span>
+          <button type="button" id="btnEditShort" class="btn-edit-sm no-print" onclick="toggleVisionEdit('short')">수정</button>
+        </div>
+        <div id="dispShortVision" class="vision-display"></div>
+        <div id="editBoxShort" class="row no-print" style="margin-top:6px; margin-bottom:0; display:none;">
+          <input type="text" id="inShortVision" placeholder="1~2년 내 반드시 완수할 목표 비전">
+          <button type="button" id="btnSaveShort" class="btn-purple" style="padding:8px 12px;" onclick="saveSingleVision('short')">확인</button>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div>
+          <label id="lblSin">신(神 · 정보/사고)</label>
+          <input type="text" id="inSin" placeholder="오늘 입력할 고급 정보">
+        </div>
+        <div>
+          <label id="lblGi">기(氣 · 감정/흐름)</label>
+          <input type="text" id="inGi" placeholder="감정/호흡 루틴">
+        </div>
+        <div>
+          <label id="lblJeong">정(精 · 신체/행동)</label>
+          <input type="text" id="inJeong" placeholder="운동/실천 행동">
+        </div>
+      </div>
+      <div class="row no-print">
+        <button type="button" id="btnSaveBio" class="btn-purple" onclick="saveBio()">정·기·신 저장</button>
+        <button type="button" id="btnPrint" class="btn-gray" onclick="window.print()">A4 다이어리 인쇄</button>
+        <span id="saveMsg" style="color:#00897b; font-weight:bold;"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="hPlan">오늘의 공부 · 실천 계획 (탭 2·4 자동 연동)</h2>
+      <div class="row no-print">
+        <input type="time" id="inTime" value="09:00" style="max-width:130px;">
+        <select id="inType" style="max-width:120px;">
+          <option id="optStudy" value="공부">공부 계획</option>
+          <option id="optAction" value="실천">일반 실천</option>
+        </select>
+        <input type="text" id="inText" placeholder="할 일을 입력하세요">
+        <button type="button" id="btnAddPlan" class="btn-teal" onclick="addPlan()">추가</button>
+      </div>
+      <ul id="listPlan" class="list"></ul>
+    </div>
+  </section>
+
+  <!-- 탭 2 -->
+  <section id="t2" class="panel">
+    <div class="card">
+      <h2 id="hTimer">열품타 집중 스톱워치</h2>
+      <div class="timer-box">
+        <div id="lblTimerSub" style="font-size:0.85rem; color:#666;">오늘의 순수 집중 공부 시간</div>
+        <div id="timerText" class="timer-display">00:00:00</div>
+        <div class="row" style="justify-content:center; margin-bottom:0;">
+          <button type="button" id="btnStart" class="btn-teal" onclick="startTimer()">시작</button>
+          <button type="button" id="btnPause" class="btn-gold" onclick="pauseTimer()">일시정지</button>
+          <button type="button" id="btnReset" class="btn-gray" onclick="resetTimer()">초기화</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="hStudyGoal">오늘의 연동된 공부 목표 & Pi 벌금 정산</h2>
+      <ul id="listStudy" class="list"></ul>
+      <div class="row" style="margin-top:12px;">
+        <label id="lblPenaltyRate" style="margin:0;">미달성 1건당 벌금(Pi):</label>
+        <input type="number" id="inPenaltyRate" value="1" min="0" step="0.5" style="max-width:90px;" onchange="render()">
+        <span id="txtPenalty" style="font-weight:bold; color:#5b2c83;"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 탭 3 -->
+  <section id="t3" class="panel">
+    <div class="card">
+      <h2 id="hProj">프로젝트 일정 등록 (탭 4 자동 연동)</h2>
+      <div class="row">
+        <input type="time" id="prTime" value="14:00" style="max-width:130px;">
+        <input type="text" id="prTitle" placeholder="프로젝트명">
+        <input type="text" id="prDesc" placeholder="참여 인원 및 실행 내용">
+        <button type="button" id="btnAddProj" class="btn-purple" onclick="addProj()">등록</button>
+      </div>
+      <ul id="listProj" class="list"></ul>
+    </div>
+  </section>
+
+  <!-- 탭 4 -->
+  <section id="t4" class="panel">
+    <div class="card">
+      <h2 id="hMorning">아침 모닝 브리핑 (음성 TTS & 비주얼 프롬프터)</h2>
+      <label id="lblMorningNote">긍정 확언 & 오늘 외울 암기 문장</label>
+      <textarea id="inMorningNote" rows="2" placeholder="예: 나는 매일 성장한다. 오늘 핵심 암기 문장을 3번 복창하자."></textarea>
+      <div class="row">
+        <button type="button" id="btnSaveMorning" class="btn-purple" onclick="saveMorning()">문구 저장</button>
+        <button type="button" id="btnSpeak" class="btn-teal" onclick="speakBriefing()">브리핑 실행</button>
+        <button type="button" id="btnStop" class="btn-gray" onclick="stopBriefing()">정지</button>
+      </div>
+      <div id="prompterBox" class="prompter-box">
+        <div id="prompterStep" class="prompter-step">MORNING BRIEFING</div>
+        <div id="prompterLine" class="prompter-line"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="hAll">통합 자동 일정표 (시간순 자동 취합)</h2>
+      <ul id="listAll" class="list"></ul>
+    </div>
+  </section>
+</main>
+
+<script>
+var KEY = 'mm_pi_master_v1';
+var state = {
+  lang: 'ko',
+  user: '',
+  vision: '',
+  vision10: '',
+  vision3to5: '',
+  vision1to2: '',
+  sin: '',
+  gi: '',
+  jeong: '',
+  morningNote: '',
+  seconds: 0,
+  plans: [],
+  projs: []
+};
+var timerInterval = null;
+var prompterTimer = null;
+var editModes = { life: false, ten: false, mid: false, short: false };
+
+var i18n = {
+  ko: {
+    langBtn: 'English',
+    subTitle: '정·기·신 3대 바디 의식적 조절 & 자기창조 시스템',
+    guest: '게스트 상태',
+    loggedIn: ' 로그인됨',
+    loginBtn: 'Pi 로그인',
+    logoutBtn: '로그아웃',
+    tab1: '1. 정·기·신 다이어리',
+    tab2: '2. 열품타 스터디',
+    tab3: '3. 프로젝트 방',
+    tab4: '4. 통합 일정표 & 브리핑',
+    hVision: '4단계 비전 & 오늘의 정·기·신 상태',
+    lifeVision: '인생 비전',
+    tenVision: '10년 비전',
+    midVision: '3~5년 비전',
+    shortVision: '1~2년 비전',
+    editBtn: '수정',
+    cancelBtn: '닫기',
+    confirmBtn: '확인',
+    emptyVision: '입력된 내용이 없습니다. [수정]을 눌러 작성해 주세요.',
+    phLife: '예: 나는 내 몸과 감정과 생각의 주인이다.',
+    phTen: '10년 후 내가 이루고 싶은 모습',
+    phMid: '3~5년 내 달성할 중기 비전',
+    phShort: '1~2년 내 반드시 완수할 목표 비전',
+    lblSin: '신(神 · 정보/사고)',
+    phSin: '오늘 입력할 고급 정보',
+    lblGi: '기(氣 · 감정/흐름)',
+    phGi: '감정/호흡 루틴',
+    lblJeong: '정(精 · 신체/행동)',
+    phJeong: '운동/실천 행동',
+    btnSaveBio: '정·기·신 저장',
+    btnPrint: 'A4 다이어리 인쇄',
+    savedOk: '저장 완료!',
+    hPlan: '오늘의 공부 · 실천 계획 (탭 2·4 자동 연동)',
+    optStudy: '공부 계획',
+    optAction: '일반 실천',
+    phPlan: '할 일을 입력하세요',
+    btnAdd: '추가',
+    delBtn: '삭제',
+    noPlan: '등록된 계획이 없습니다.',
+    hTimer: '열품타 집중 스톱워치',
+    lblTimerSub: '오늘의 순수 집중 공부 시간',
+    btnStart: '시작',
+    btnPause: '일시정지',
+    btnReset: '초기화',
+    hStudyGoal: '오늘의 연동된 공부 목표 & Pi 벌금 정산',
+    lblPenaltyRate: '미달성 1건당 벌금(Pi):',
+    noStudy: '탭 1에서 공부 계획을 추가하면 자동 표시됩니다.',
+    doneTxt: '달성 완료',
+    progTxt: '진행 중',
+    hProj: '프로젝트 일정 등록 (탭 4 자동 연동)',
+    phProjTitle: '프로젝트명',
+    phProjDesc: '참여 인원 및 실행 내용',
+    btnReg: '등록',
+    noProj: '등록된 프로젝트가 없습니다.',
+    hMorning: '아침 모닝 브리핑 (음성 TTS & 비주얼 프롬프터)',
+    lblMorningNote: '긍정 확언 & 오늘 외울 암기 문장',
+    phMorningNote: '예: 나는 매일 성장한다. 오늘 핵심 암기 문장을 3번 복창하자.',
+    btnSaveMorning: '문구 저장',
+    btnSpeak: '브리핑 실행',
+    btnStop: '정지',
+    hAll: '통합 자동 일정표 (시간순 자동 취합)',
+    noAll: '등록된 통합 일정이 없습니다.',
+    projTag: '프로젝트',
+    morningSavedAlert: '브리핑 문구가 저장되었습니다.'
+  },
+  en: {
+    langBtn: '한국어',
+    subTitle: 'Conscious Regulation of Spirit·Energy·Body & Self-Creation',
+    guest: 'Guest Mode',
+    loggedIn: ' Logged in',
+    loginBtn: 'Pi Login',
+    logoutBtn: 'Logout',
+    tab1: '1. Mind·Energy·Body',
+    tab2: '2. Study Room',
+    tab3: '3. Projects',
+    tab4: '4. Schedule & Briefing',
+    hVision: '4-Step Vision & Daily State',
+    lifeVision: 'Life Vision',
+    tenVision: '10-Year Vision',
+    midVision: '3–5 Year Vision',
+    shortVision: '1–2 Year Vision',
+    editBtn: 'Edit',
+    cancelBtn: 'Close',
+    confirmBtn: 'Save',
+    emptyVision: 'No vision set yet. Click [Edit] to write yours.',
+    phLife: 'e.g., I am the master of my body, emotions, and thoughts.',
+    phTen: 'Who I want to become in 10 years',
+    phMid: 'Mid-term vision within 3–5 years',
+    phShort: 'Key vision to achieve within 1–2 years',
+    lblSin: 'Spirit (Info & Mindset)',
+    phSin: 'Quality information to input today',
+    lblGi: 'Energy (Emotion & Flow)',
+    phGi: 'Breathing & emotional routine',
+    lblJeong: 'Body (Action & Health)',
+    phJeong: 'Exercise & physical action',
+    btnSaveBio: 'Save Daily State',
+    btnPrint: 'Print A4 Diary',
+    savedOk: 'Saved!',
+    hPlan: 'Daily Study & Action Plan (Auto-Synced)',
+    optStudy: 'Study Plan',
+    optAction: 'Action Plan',
+    phPlan: 'Enter your task for today',
+    btnAdd: 'Add',
+    delBtn: 'Delete',
+    noPlan: 'No plans added yet.',
+    hTimer: 'Focus Study Stopwatch',
+    lblTimerSub: 'Pure Focus Study Time Today',
+    btnStart: 'Start',
+    btnPause: 'Pause',
+    btnReset: 'Reset',
+    hStudyGoal: 'Synced Study Goals & Pi Penalty Settlement',
+    lblPenaltyRate: 'Penalty per missed goal (Pi):',
+    noStudy: 'Add a Study Plan in Tab 1 to auto-sync here.',
+    doneTxt: 'Completed',
+    progTxt: 'In Progress',
+    hProj: 'Register Project Schedule (Auto-Synced)',
+    phProjTitle: 'Project Name',
+    phProjDesc: 'Members & action details',
+    btnReg: 'Register',
+    noProj: 'No projects registered yet.',
+    hMorning: 'Morning Briefing (Voice TTS & Visual Prompter)',
+    lblMorningNote: 'Positive Affirmation & Memorization Sentence',
+    phMorningNote: 'e.g., I grow every single day. Let us repeat today’s key sentence 3 times.',
+    btnSaveMorning: 'Save Note',
+    btnSpeak: 'Start Briefing',
+    btnStop: 'Stop',
+    hAll: 'Integrated Auto-Schedule (Chronological)',
+    noAll: 'No scheduled items yet.',
+    projTag: 'Project',
+    morningSavedAlert: 'Briefing note saved.'
+  }
+};
+
+function load() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) state = Object.assign(state, JSON.parse(raw));
+  } catch (e) {}
+}
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  render();
+}
+
+function toggleLang() {
+  state.lang = (state.lang === 'ko') ? 'en' : 'ko';
+  save();
+}
+
+function openTab(id, btn) {
+  var tabs = document.querySelectorAll('.tab');
+  var panels = document.querySelectorAll('.panel');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  for (var j = 0; j < panels.length; j++) panels[j].classList.remove('active');
+  btn.classList.add('active');
+  var target = document.getElementById(id);
+  if (target) target.classList.add('active');
+}
+
+function handleAuthClick() {
+  if (state.user) {
+    state.user = '';
+    save();
+    return;
+  }
+  if (window.Pi && typeof window.Pi.authenticate === 'function') {
+    try {
+      window.Pi.init({ version: '2.0', sandbox: true });
+      window.Pi.authenticate(['username', 'payments'], function(){})
+        .then(function(auth) { state.user = '@' + auth.user.username; save(); })
+        .catch(function() { state.user = '@mm_solohost_user'; save(); });
+    } catch (e) {
+      state.user = '@mm_solohost_user';
+      save();
+    }
+  } else {
+    state.user = '@mm_solohost_user';
+    save();
+  }
+}
+
+function toggleVisionEdit(key) {
+  editModes[key] = !editModes[key];
+  render();
+}
+
+function saveSingleVision(key) {
+  if (key === 'life') state.vision = document.getElementById('inLifeVision').value.trim();
+  if (key === 'ten') state.vision10 = document.getElementById('inTenVision').value.trim();
+  if (key === 'mid') state.vision3to5 = document.getElementById('inMidVision').value.trim();
+  if (key === 'short') state.vision1to2 = document.getElementById('inShortVision').value.trim();
+  editModes[key] = false;
+  save();
+}
+
+function saveBio() {
+  state.sin = document.getElementById('inSin').value;
+  state.gi = document.getElementById('inGi').value;
+  state.jeong = document.getElementById('inJeong').value;
+  save();
+  var t = i18n[state.lang];
+  var m = document.getElementById('saveMsg');
+  m.textContent = t.savedOk;
+  setTimeout(function() { m.textContent = ''; }, 2000);
+}
+
+function addPlan() {
+  var t = document.getElementById('inTime').value || '09:00';
+  var tp = document.getElementById('inType').value;
+  var tx = document.getElementById('inText').value.trim();
+  if (!tx) { alert(state.lang === 'ko' ? '할 일을 입력하세요.' : 'Please enter a task.'); return; }
+  state.plans.push({ id: Date.now(), time: t, type: tp, text: tx, done: false });
+  document.getElementById('inText').value = '';
+  save();
+}
+
+function togglePlan(id) {
+  for (var i = 0; i < state.plans.length; i++) {
+    if (state.plans[i].id === id) state.plans[i].done = !state.plans[i].done;
+  }
+  save();
+}
+
+function delPlan(id) {
+  state.plans = state.plans.filter(function(p) { return p.id !== id; });
+  save();
+}
+
+function addProj() {
+  var t = document.getElementById('prTime').value || '14:00';
+  var tl = document.getElementById('prTitle').value.trim();
+  var ds = document.getElementById('prDesc').value.trim();
+  if (!tl) { alert(state.lang === 'ko' ? '프로젝트명을 입력하세요.' : 'Please enter a project name.'); return; }
+  state.projs.push({ id: Date.now(), time: t, title: tl, desc: ds });
+  document.getElementById('prTitle').value = '';
+  document.getElementById('prDesc').value = '';
+  save();
+}
+
+function delProj(id) {
+  state.projs = state.projs.filter(function(p) { return p.id !== id; });
+  save();
+}
+
+function formatTime(sec) {
+  var h = Math.floor(sec / 3600);
+  var m = Math.floor((sec % 3600) / 60);
+  var s = sec % 60;
+  return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+}
+
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(function() {
+    state.seconds++;
+    document.getElementById('timerText').textContent = formatTime(state.seconds);
+    if (state.seconds % 5 === 0) {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  save();
+}
+
+function resetTimer() {
+  pauseTimer();
+  state.seconds = 0;
+  save();
+}
+
+function saveMorning() {
+  state.morningNote = document.getElementById('inMorningNote').value;
+  save();
+  alert(i18n[state.lang].morningSavedAlert);
+}
+
+function playChime() {
+  try {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    var ctx = new AudioCtx();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.18);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+  } catch (e) {}
+}
+
+function buildBriefingLines() {
+  var lines = [];
+  var isEn = (state.lang === 'en');
+  lines.push(isEn ? 'Good morning! Welcome to your Make Me with Pi briefing.' : '좋은 아침입니다. Make Me with Pi 모닝 브리핑을 시작합니다.');
+  if (state.vision) {
+    lines.push((isEn ? 'Life Vision: ' : '인생 비전: ') + state.vision);
+  }
+  if (state.vision1to2) {
+    lines.push((isEn ? '1–2 Year Vision: ' : '1~2년 비전: ') + state.vision1to2);
+  }
+  if (state.morningNote) {
+    lines.push(state.morningNote);
+  }
+  var all = getCombinedSchedule();
+  if (all.length > 0) {
+    lines.push(isEn ? ('You have ' + all.length + ' scheduled items today.') : ('오늘 예정된 일정은 총 ' + all.length + '건입니다.'));
+    for (var i = 0; i < all.length; i++) {
+      lines.push(all[i].time + ' — ' + all[i].text);
+    }
+  } else {
+    lines.push(isEn ? 'No scheduled items registered yet.' : '현재 등록된 일정이 없습니다.');
+  }
+  return lines;
+}
+
+function startVisualPrompter(lines) {
+  stopVisualPrompter();
+  playChime();
+  var box = document.getElementById('prompterBox');
+  var stepEl = document.getElementById('prompterStep');
+  var lineEl = document.getElementById('prompterLine');
+  box.style.display = 'block';
+  var idx = 0;
+  function showLine() {
+    stepEl.textContent = (state.lang === 'en' ? 'MORNING BRIEFING ' : '모닝 브리핑 진행 중 ') + '(' + (idx + 1) + ' / ' + lines.length + ')';
+    lineEl.textContent = lines[idx];
+    idx++;
+    if (idx >= lines.length) {
+      clearInterval(prompterTimer);
+      prompterTimer = null;
+    }
+  }
+  showLine();
+  if (lines.length > 1) {
+    prompterTimer = setInterval(showLine, 3200);
+  }
+}
+
+function stopVisualPrompter() {
+  if (prompterTimer) {
+    clearInterval(prompterTimer);
+    prompterTimer = null;
+  }
+  document.getElementById('prompterBox').style.display = 'none';
+}
+
+function speakBriefing() {
+  var lines = buildBriefingLines();
+  startVisualPrompter(lines);
+  if ('speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined') {
+    try {
+      window.speechSynthesis.cancel();
+      var utter = new SpeechSynthesisUtterance(lines.join(' '));
+      utter.lang = (state.lang === 'en') ? 'en-US' : 'ko-KR';
+      utter.rate = 1.0;
+      window.speechSynthesis.speak(utter);
+    } catch (e) {}
+  }
+}
+
+function stopBriefing() {
+  stopVisualPrompter();
+  try {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  } catch (e) {}
+}
+
+function getCombinedSchedule() {
+  var t = i18n[state.lang];
+  var all = [];
+  for (var a = 0; a < state.plans.length; a++) {
+    var tagLabel = (state.plans[a].type === '공부') ? t.optStudy : t.optAction;
+    all.push({ time: state.plans[a].time, tag: tagLabel, text: state.plans[a].text, isProj: false });
+  }
+  for (var b = 0; b < state.projs.length; b++) {
+    all.push({ time: state.projs[b].time, tag: t.projTag, text: state.projs[b].title + (state.projs[b].desc ? ' - ' + state.projs[b].desc : ''), isProj: true });
+  }
+  all.sort(function(x, y) { return x.time.localeCompare(y.time); });
+  return all;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderVisionField(key, dispId, editBoxId, inputId, btnId, value, emptyText) {
+  var dispEl = document.getElementById(dispId);
+  var boxEl = document.getElementById(editBoxId);
+  var inpEl = document.getElementById(inputId);
+  var btnEl = document.getElementById(btnId);
+  var t = i18n[state.lang];
+
+  inpEl.value = value || '';
+  if (value) {
+    dispEl.innerHTML = esc(value);
+    dispEl.className = 'vision-display';
+  } else {
+    dispEl.innerHTML = '<span class="vision-empty">' + emptyText + '</span>';
+  }
+
+  if (editModes[key]) {
+    boxEl.style.display = 'flex';
+    btnEl.textContent = t.cancelBtn;
+  } else {
+    boxEl.style.display = 'none';
+    btnEl.textContent = t.editBtn;
+  }
+}
+
+function render() {
+  var t = i18n[state.lang];
+  document.getElementById('btnLang').textContent = t.langBtn;
+  document.getElementById('txtSubTitle').textContent = t.subTitle;
+  document.getElementById('userBadge').textContent = state.user ? state.user + t.loggedIn : t.guest;
+  document.getElementById('btnAuth').textContent = state.user ? t.logoutBtn : t.loginBtn;
+
+  document.getElementById('tabBtn1').textContent = t.tab1;
+  document.getElementById('tabBtn2').textContent = t.tab2;
+  document.getElementById('tabBtn3').textContent = t.tab3;
+  document.getElementById('tabBtn4').textContent = t.tab4;
+
+  document.getElementById('hVision').textContent = t.hVision;
+  document.getElementById('lblLifeVision').textContent = t.lifeVision;
+  document.getElementById('lblTenVision').textContent = t.tenVision;
+  document.getElementById('lblMidVision').textContent = t.midVision;
+  document.getElementById('lblShortVision').textContent = t.shortVision;
+
+  document.getElementById('inLifeVision').placeholder = t.phLife;
+  document.getElementById('inTenVision').placeholder = t.phTen;
+  document.getElementById('inMidVision').placeholder = t.phMid;
+  document.getElementById('inShortVision').placeholder = t.phShort;
+
+  document.getElementById('btnSaveLife').textContent = t.confirmBtn;
+  document.getElementById('btnSaveTen').textContent = t.confirmBtn;
+  document.getElementById('btnSaveMid').textContent = t.confirmBtn;
+  document.getElementById('btnSaveShort').textContent = t.confirmBtn;
+
+  renderVisionField('life', 'dispLifeVision', 'editBoxLife', 'inLifeVision', 'btnEditLife', state.vision, t.emptyVision);
+  renderVisionField('ten', 'dispTenVision', 'editBoxTen', 'inTenVision', 'btnEditTen', state.vision10, t.emptyVision);
+  renderVisionField('mid', 'dispMidVision', 'editBoxMid', 'inMidVision', 'btnEditMid', state.vision3to5, t.emptyVision);
+  renderVisionField('short', 'dispShortVision', 'editBoxShort', 'inShortVision', 'btnEditShort', state.vision1to2, t.emptyVision);
+
+  document.getElementById('lblSin').textContent = t.lblSin;
+  document.getElementById('inSin').placeholder = t.phSin;
+  document.getElementById('lblGi').textContent = t.lblGi;
+  document.getElementById('inGi').placeholder = t.phGi;
+  document.getElementById('lblJeong').textContent = t.lblJeong;
+  document.getElementById('inJeong').placeholder = t.phJeong;
+  document.getElementById('btnSaveBio').textContent = t.btnSaveBio;
+  document.getElementById('btnPrint').textContent = t.btnPrint;
+
+  document.getElementById('hPlan').textContent = t.hPlan;
+  document.getElementById('optStudy').textContent = t.optStudy;
+  document.getElementById('optAction').textContent = t.optAction;
+  document.getElementById('inText').placeholder = t.phPlan;
+  document.getElementById('btnAddPlan').textContent = t.btnAdd;
+
+  document.getElementById('hTimer').textContent = t.hTimer;
+  document.getElementById('lblTimerSub').textContent = t.lblTimerSub;
+  document.getElementById('btnStart').textContent = t.btnStart;
+  document.getElementById('btnPause').textContent = t.btnPause;
+  document.getElementById('btnReset').textContent = t.btnReset;
+  document.getElementById('hStudyGoal').textContent = t.hStudyGoal;
+  document.getElementById('lblPenaltyRate').textContent = t.lblPenaltyRate;
+
+  document.getElementById('hProj').textContent = t.hProj;
+  document.getElementById('prTitle').placeholder = t.phProjTitle;
+  document.getElementById('prDesc').placeholder = t.phProjDesc;
+  document.getElementById('btnAddProj').textContent = t.btnReg;
+
+  document.getElementById('hMorning').textContent = t.hMorning;
+  document.getElementById('lblMorningNote').textContent = t.lblMorningNote;
+  document.getElementById('inMorningNote').placeholder = t.phMorningNote;
+  document.getElementById('btnSaveMorning').textContent = t.btnSaveMorning;
+  document.getElementById('btnSpeak').textContent = t.btnSpeak;
+  document.getElementById('btnStop').textContent = t.btnStop;
+  document.getElementById('hAll').textContent = t.hAll;
+
+  document.getElementById('inSin').value = state.sin;
+  document.getElementById('inGi').value = state.gi;
+  document.getElementById('inJeong').value = state.jeong;
+  document.getElementById('inMorningNote').value = state.morningNote;
+  document.getElementById('timerText').textContent = formatTime(state.seconds);
+
+  var hPlan = '';
+  for (var i = 0; i < state.plans.length; i++) {
+    var p = state.plans[i];
+    var pLabel = (p.type === '공부') ? t.optStudy : t.optAction;
+    hPlan += '<li><div><input type="checkbox" ' + (p.done ? 'checked' : '') + ' onchange="togglePlan(' + p.id + ')"> ';
+    hPlan += '<span class="tag">' + p.time + ' · ' + pLabel + '</span>';
+    hPlan += '<span class="' + (p.done ? 'done' : '') + '">' + esc(p.text) + '</span></div>';
+    hPlan += '<button type="button" class="btn-del no-print" onclick="delPlan(' + p.id + ')">' + t.delBtn + '</button></li>';
+  }
+  document.getElementById('listPlan').innerHTML = hPlan || '<li style="color:#888">' + t.noPlan + '</li>';
+
+  var studies = state.plans.filter(function(p) { return p.type === '공부'; });
+  var hStudy = '';
+  var undone = 0;
+  for (var j = 0; j < studies.length; j++) {
+    var s = studies[j];
+    if (!s.done) undone++;
+    hStudy += '<li><div><span class="tag">' + s.time + '</span><span class="' + (s.done ? 'done' : '') + '">' + esc(s.text) + '</span></div>';
+    hStudy += '<span>' + (s.done ? t.doneTxt : t.progTxt) + '</span></li>';
+  }
+  document.getElementById('listStudy').innerHTML = hStudy || '<li style="color:#888">' + t.noStudy + '</li>';
+
+  var rate = parseFloat(document.getElementById('inPenaltyRate').value) || 0;
+  if (state.lang === 'en') {
+    document.getElementById('txtPenalty').textContent = 'Missed ' + undone + ' of ' + studies.length + ' goals (Est. Penalty: ' + (undone * rate) + ' Pi)';
+  } else {
+    document.getElementById('txtPenalty').textContent = '공부 ' + studies.length + '건 중 미달성 ' + undone + '건 (예상 벌금: ' + (undone * rate) + ' Pi)';
+  }
+
+  var hProj = '';
+  for (var k = 0; k < state.projs.length; k++) {
+    var pr = state.projs[k];
+    hProj += '<li><div><span class="tag tag-proj">' + pr.time + '</span><strong>' + esc(pr.title) + '</strong> ' + esc(pr.desc) + '</div>';
+    hProj += '<button type="button" class="btn-del" onclick="delProj(' + pr.id + ')">' + t.delBtn + '</button></li>';
+  }
+  document.getElementById('listProj').innerHTML = hProj || '<li style="color:#888">' + t.noProj + '</li>';
+
+  var all = getCombinedSchedule();
+  var hAll = '';
+  for (var c = 0; c < all.length; c++) {
+    hAll += '<li><div><span class="tag ' + (all[c].isProj ? 'tag-proj' : '') + '">' + all[c].time + ' · ' + all[c].tag + '</span>' + esc(all[c].text) + '</div></li>';
+  }
+  document.getElementById('listAll').innerHTML = hAll || '<li style="color:#888">' + t.noAll + '</li>';
+}
+
+load();
+render();
+</script>
+
+</body>
+</html>
