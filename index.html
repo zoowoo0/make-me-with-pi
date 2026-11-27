@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Make Me with Pi (MM)</title>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<style>
+  :root {
+    --purple: #5b2c83;
+    --purple-dark: #3d1c5a;
+    --gold: #f5a623;
+    --teal: #00897b;
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #222222;
+    --border: #e0e4e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', -apple-system, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding-bottom: 40px; }
+  header {
+    background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+    color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 { font-size: 1.25rem; }
+  header span.sub { font-size: 0.8rem; color: var(--gold); display: block; margin-top: 2px; }
+  .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .user-badge { background: rgba(255,255,255,0.16); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; }
+  button {
+    cursor: pointer; border: none; border-radius: 8px; padding: 8px 14px;
+    font-weight: bold; font-size: 0.88rem; transition: 0.15s;
+  }
+  button:hover { opacity: 0.9; }
+  .btn-gold { background: var(--gold); color: #222; }
+  .btn-logout { background: #ffffff; color: var(--purple); }
+  .btn-lang { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+  .btn-purple { background: var(--purple); color: #fff; }
+  .btn-teal { background: var(--teal); color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; }
+  .btn-danger { background: #e53935; color: #fff; padding: 5px 10px; font-size: 0.8rem; }
+
+  nav.tabs {
+    display: flex; background: #fff; border-bottom: 2px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  nav.tabs button {
+    flex: 1; background: transparent; color: #666; border-radius: 0;
+    padding: 13px 6px; font-size: 0.9rem; border-bottom: 3px solid transparent;
+  }
+  nav.tabs button.active {
+    color: var(--purple); border-bottom-color: var(--purple); background: #faf7fc;
+  }
+
+  main { max-width: 840px; margin: 18px auto; padding: 0 14px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card {
+    background: var(--card); border-radius: 12px; padding: 18px;
+    margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 1.05rem; color: var(--purple); margin-bottom: 14px;
+    border-left: 4px solid var(--gold); padding-left: 9px;
+  }
+
+  .vision-box {
+    background: #faf8fc; border: 1px solid #e6dcf0; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .vision-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .vision-title { font-weight: bold; font-size: 0.9rem; color: var(--purple); }
+  .vision-text { font-size: 0.94rem; color: #333; white-space: pre-wrap; line-height: 1.45; }
+  .vision-edit-area { display: none; margin-top: 8px; }
+  .vision-edit-area.open { display: block; }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 12px; }
+  label { display: block; font-size: 0.84rem; font-weight: bold; margin-bottom: 5px; color: #444; }
+  input[type="text"], input[type="number"], input[type="time"], select, textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid #ccc; border-radius: 8px;
+    font-size: 0.93rem; margin-bottom: 8px;
+  }
+  .row-input { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .row-input input, .row-input select { flex: 1; min-width: 110px; margin-bottom: 0; }
+
+  ul.item-list { list-style: none; margin-top: 12px; }
+  ul.item-list li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; background: #f9fafb; border: 1px solid #eee;
+    border-radius: 8px; margin-bottom: 8px; gap: 10px;
+  }
+  .done-text { text-decoration: line-through; color: #999; }
+  .tag { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; background: #eee; font-weight: bold; }
+  .tag-study { background: #e8eaf6; color: #3f51b5; }
+  .tag-proj { background: #e0f2f1; color: #00695c; }
+
+  .timer-box { text-align: center; padding: 14px 0; }
+  .timer-display { font-size: 2.3rem; font-weight: bold; color: var(--purple); letter-spacing: 2px; margin: 10px 0 14px; font-variant-numeric: tabular-nums; }
+
+  .prompter-box {
+    background: linear-gradient(135deg, #2c1642, #4a236b); color: #fff;
+    border-radius: 12px; padding: 20px; text-align: center; margin-top: 12px;
+  }
+  .prompter-label { font-size: 0.78rem; color: var(--gold); letter-spacing: 1px; margin-bottom: 8px; }
+  .prompter-line { font-size: 1.08rem; font-weight: bold; line-height: 1.5; min-height: 52px; display: flex; align-items: center; justify-content: center; }
+
+  .goal-item { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; padding:8px 0; border-bottom:1px dashed #e0d6ec; }
+  .goal-up { font-size:0.75rem; color:var(--teal); margin-top:2px; }
+  input[type="date"] { padding:9px 11px; border:1px solid #ccc; border-radius:8px; font-size:0.93rem; }
+
+  .subnav { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+  .sub-btn { background:#fff; color:#666; border:1px solid var(--border); border-radius:20px; }
+  .sub-btn.active { background:var(--purple); color:#fff; border-color:var(--purple); }
+  .sub-pane { display:none; }
+  .sub-pane.active { display:block; }
+  .cal { width:100%; border-collapse:collapse; table-layout:fixed; }
+  .cal th { font-size:0.8rem; padding:4px; color:#666; }
+  .cal td { border:1px solid var(--border); height:56px; vertical-align:top; padding:3px; font-size:0.78rem; cursor:pointer; background:#fff; }
+  .cal td.sel { background:#f1e8f8; border-color:var(--purple); }
+  .cal td.tod { font-weight:bold; color:var(--purple); }
+  .cal td.sun { color:#c0392b; }
+  .cal td small { display:block; color:var(--teal); }
+  #printSheet { display:none; }
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print {
+    header, nav.tabs, main { display: none !important; }
+    body { background: #fff; padding: 0; }
+    #printSheet { display: block; }
+  }
+  .ps-head { display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:4px; margin-bottom:8px; font-weight:bold; }
+  .ps-cols { display:flex; gap:14px; }
+  .ps-col { flex:1; }
+  .ps h3 { font-size:13px; margin:8px 0 3px; border-left:4px solid #5b2c83; padding-left:6px; }
+  .ps p, .ps td { font-size:12px; line-height:1.4; white-space:pre-wrap; }
+  .ps table { width:100%; border-collapse:collapse; }
+  .ps td { border:1px solid #999; padding:4px 6px; }
+  .ps .memo { border:1px solid #999; height:110px; margin-top:6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 id="appTitle">Make Me with Pi (MM)</h1>
+    <span class="sub" id="appSub">정·기·신 3대 바디 의식적 조절 & 자기창조 시스템</span>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn-lang" id="langBtn" onclick="toggleLang()">English</button>
+    <span id="userDisplay" class="user-badge">게스트 상태</span>
+    <button type="button" id="authBtn" class="btn-gold" onclick="handleAuthClick()">Pi 로그인</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button type="button" class="tab-btn active" data-target="tab1" id="nav1">1. 4대 비전</button>
+  <button type="button" class="tab-btn" data-target="tab2" id="nav2">2. 열품타 스터디</button>
+  <button type="button" class="tab-btn" data-target="tab3" id="nav3">3. 프로젝트 방</button>
+  <button type="button" class="tab-btn" data-target="tab4" id="nav4">4. 통합 일정표 & 브리핑</button>
+</nav>
+
+<main>
+  <!-- 탭 1 -->
+  <section id="tab1" class="tab-panel active">
+    <div class="subnav no-print">
+      <button type="button" class="sub-btn active" id="sb_vision" onclick="showSub('vision')">비전</button>
+      <button type="button" class="sub-btn" id="sb_year" onclick="showSub('year')">연간</button>
+      <button type="button" class="sub-btn" id="sb_month" onclick="showSub('month')">월간·일정표</button>
+      <button type="button" class="sub-btn" id="sb_today" onclick="showSub('today')">오늘</button>
+    </div>
+
+    <div class="sub-pane active" id="sp_vision">
+      <div class="card">
+        <h2 id="hVision">4단계 비전</h2>
+        <div id="goalTree"></div>
+      </div>
+      <div class="card no-print">
+        <h2 id="hBackup">백업</h2>
+        <p id="bkNote" style="font-size:0.85rem; color:#666; margin:0 0 8px;"></p>
+        <div class="row-input">
+          <button type="button" class="btn-purple btn-sm" onclick="exportData()" id="bkShow">백업 보기</button>
+          <button type="button" class="btn-teal btn-sm" onclick="importData()" id="bkLoad">불러오기</button>
+        </div>
+        <textarea id="backupBox" rows="3" style="margin-top:8px;"></textarea>
+      </div>
+    </div>
+
+    <div class="sub-pane" id="sp_year">
+      <div class="card"><h2 id="hLong">장기 비전 (자동 정리)</h2><div id="longList"></div></div>
+      <div class="card">
+        <h2 id="hYear">연간 계획</h2>
+        <div class="row-input" style="justify-content:center; margin-bottom:10px;">
+          <button type="button" class="btn-purple btn-sm" onclick="moveYear(-1)">◀</button>
+          <strong id="yearLbl" style="min-width:90px; text-align:center;"></strong>
+          <button type="button" class="btn-purple btn-sm" onclick="moveYear(1)">▶</button>
+        </div>
+        <div id="yearGoals"></div>
+        <div id="monthGrid" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <div class="sub-pane" id="sp_month">
+      <div class="card">
+        <h2 id="hMonth">월간 계획</h2>
+        <div class="row-input" style="justify-content:center; margin-bottom:10px;">
+          <button type="button" class="btn-purple btn-sm" onclick="moveMonth(-1)">◀</button>
+          <strong id="monthLbl" style="min-width:110px; text-align:center;"></strong>
+          <button type="button" class="btn-purple btn-sm" onclick="moveMonth(1)">▶</button>
+        </div>
+        <div id="monthGoals"></div>
+      </div>
+      <div class="card">
+        <h2 id="hCal">월 일정표</h2>
+        <div id="monthCal"></div>
+        <div style="margin-top:12px;">
+          <strong id="calDayLbl"></strong>
+          <div class="row-input no-print" style="margin-top:6px;">
+            <input type="time" id="mPlanTime" value="09:00" style="max-width:130px;" />
+            <select id="mPlanType" style="max-width:130px;"><option value="study">공부 계획</option><option value="action">일반 실천</option></select>
+            <select id="mPlanGoal" style="max-width:200px;"></select>
+            <input type="text" id="mPlanText" placeholder="할 일을 입력하세요" />
+            <button type="button" class="btn-teal" onclick="addPlan('mPlan')" id="mBtnAddPlan">추가</button>
+          </div>
+          <ul id="mPlanList" class="item-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-pane" id="sp_today">
+    <div class="card">
+      <h2 id="hPlan">오늘의 계획</h2>
+      <div class="row-input no-print" style="margin-bottom:10px;">
+        <label style="margin:0;" id="lblDate1">날짜</label>
+        <input type="date" id="viewDate1" onchange="setViewDate(this.value)" style="max-width:170px; margin:0;" />
+      </div>
+      <div id="todayGoals"></div>
+      <ul id="planList" class="item-list"></ul>
+      <h3 id="hMonthAll" style="margin:14px 0 6px; color:var(--purple); font-size:1rem;"></h3>
+      <div id="monthAll"></div>
+    </div>
+    <div class="card">
+      <h2 id="hBody">오늘의 내 상태 (일기)</h2>
+      <textarea id="diaryInput" rows="6"></textarea>
+      <div class="row-input no-print" style="margin-top:8px;">
+        <button type="button" class="btn-purple" onclick="saveBodyState()" id="btnSaveBody">일기 저장</button>
+        <span id="bodySavedMsg" style="color:var(--teal); font-weight:bold; font-size:0.85rem;"></span>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- 탭 2 -->
+  <section id="tab2" class="tab-panel">
+    <div class="card">
+      <h2 id="hTimer">열품타 집중 스톱워치</h2>
+      <div class="timer-box">
+        <div style="font-size:0.88rem; color:#666;" id="lblTimerSub">오늘의 순수 집중 공부 시간</div>
+        <div class="timer-display" id="timerDisplay">00:00:00</div>
+        <div class="row-input" style="justify-content:center;">
+          <button type="button" class="btn-teal" onclick="startTimer()" id="btnTStart">시작</button>
+          <button type="button" class="btn-gold" onclick="pauseTimer()" id="btnTPause">일시정지</button>
+          <button type="button" class="btn-danger" onclick="resetTimer()" id="btnTReset" style="padding:8px 14px; font-size:0.88rem;">초기화</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="hStudyGoal">오늘의 연동된 공부 목표 & Pi 벌금 정산</h2>
+      <div class="row-input" style="margin-bottom:10px;">
+        <label style="margin:0;" id="lblPenaltyRate">미달성 1건당 벌금(Pi):</label>
+        <input type="number" id="penaltyRate" value="1" min="0" step="0.5" style="max-width:90px; margin:0;" onchange="updatePenaltyRate()" />
+      </div>
+      <ul id="studyGoalList" class="item-list"></ul>
+      <p id="penaltySummary" style="margin-top:12px; font-weight:bold; color:var(--purple);"></p>
+    </div>
+  </section>
+
+  <!-- 탭 3 -->
+  <section id="tab3" class="tab-panel">
+    <div class="card">
+      <h2 id="hProj">프로젝트 일정 등록 (탭 4 자동 연동)</h2>
+      <div class="row-input" style="margin-bottom:8px;">
+        <input type="date" id="projDate" style="max-width:160px;" />
+        <input type="time" id="projTime" value="14:00" style="max-width:130px;" />
+        <input type="text" id="projTitle" placeholder="프로젝트명" />
+      </div>
+      <div class="row-input">
+        <input type="text" id="projDetail" placeholder="참여 인원 및 실행 내용" />
+        <button type="button" class="btn-purple" onclick="addProject()" id="btnAddProj">등록</button>
+      </div>
+      <ul id="projectList" class="item-list"></ul>
+    </div>
+  </section>
+
+  <!-- 탭 4 -->
+  <section id="tab4" class="tab-panel">
+    <div class="card">
+      <h2 id="hBrief">아침 모닝 브리핑 (음성 TTS & 비주얼 프롬프터)</h2>
+      <label id="lblAffirm">긍정 확언 & 오늘 외울 암기 문장</label>
+      <textarea id="affirmInput" rows="2" placeholder="오늘 아침 나에게 들려줄 긍정 문장을 입력하세요"></textarea>
+      <div class="row-input">
+        <button type="button" class="btn-purple" onclick="saveAffirm()" id="btnSaveAffirm">문구 저장</button>
+        <button type="button" class="btn-teal" onclick="startBriefing()" id="btnStartBrief">브리핑 실행</button>
+        <button type="button" class="btn-danger" onclick="stopBriefing()" id="btnStopBrief" style="padding:8px 14px; font-size:0.88rem;">정지</button>
+      </div>
+      <div class="prompter-box">
+        <div class="prompter-label">MORNING BRIEFING</div>
+        <div class="prompter-line" id="prompterText">버튼을 누르면 비전과 오늘의 일정이 브리핑됩니다.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="hIntegrated">통합 자동 일정표 (시간순 자동 취합)</h2>
+      <div class="row-input" style="margin-bottom:10px;">
+        <label style="margin:0;" id="lblDate4">날짜</label>
+        <input type="date" id="viewDate4" onchange="setViewDate(this.value)" style="max-width:170px; margin:0;" />
+        <button type="button" class="btn-gold" onclick="printDiary()" id="btnPrint">A4 다이어리 인쇄</button>
+      </div>
+      <div id="monthGoalsBox"></div>
+      <ul id="integratedList" class="item-list"></ul>
+    </div>
+  </section>
+</main>
+
+<div id="printSheet" class="ps"></div>
+
+<script>
+  const STORAGE_KEY = 'mm_pi_state_v4';   // schema 2
+  const OLD_KEY = 'mm_pi_state_v3';       // 이전 버전(삭제하지 않고 백업으로 남김)
+  const LEVELS = ['life', 'y10', 'y35', 'y12'];   // 큰 것 → 작은 기간
+  const LEVEL_LABEL = { life: 'vLife', y10: 'v10', y35: 'v35', y12: 'v12' };
+
+  function newState() {
+    return { schema: 2, lang: 'ko', user: null, goals: [], routines: [], days: {}, projects: [], penaltyRate: 1, affirm: '' };
+  }
+  let state = newState();
+  let viewDate = today();
+  let editingGoalId = null;
+  let viewYear = +viewDate.slice(0, 4), viewMonth = viewDate.slice(0, 7);
+
+  function today() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function day(date) {   // 없으면 만들어서 돌려줌(저장용)
+    if (!state.days[date]) state.days[date] = { body: { sin: '', gi: '', jeong: '' }, plans: [], studySec: 0 };
+    return state.days[date];
+  }
+  function setVal(id, v) {   // 입력 중인 칸은 덮어쓰지 않음
+    const e = document.getElementById(id);
+    if (e && document.activeElement !== e) e.value = v;
+  }
+  function shortText(s) { return s.length > 24 ? s.slice(0, 24) + '…' : s; }
+
+  // v3 → schema 2 마이그레이션
+  function migrate(old) {
+    const s2 = newState(), t0 = today();
+    s2.lang = old.lang || 'ko';
+    if (old.user) s2.user = { username: old.user, isReal: !/mm_solohost_user|mm_tester/.test(old.user) };
+    let prevId = null;
+    [['life', old.vLife], ['y10', old.v10], ['y35', old.v35], ['y12', old.v12]].forEach(([lv, tx]) => {
+      if (!tx) return;
+      const id = 'g_' + lv;
+      s2.goals.push({ id, level: lv, text: tx, parentId: prevId, period: '' });
+      prevId = id;
+    });
+    s2.days[t0] = {
+      body: { sin: old.sin || '', gi: old.gi || '', jeong: old.jeong || '' },
+      plans: (old.plans || []).map(p => Object.assign({ roomId: null, targetMin: 0, focusSec: 0, goalId: null }, p)),
+      studySec: old.timerSec || 0
+    };
+    s2.projects = (old.projects || []).map(pr => Object.assign({ date: t0 }, pr));
+    s2.penaltyRate = old.penaltyRate == null ? 1 : old.penaltyRate;
+    s2.affirm = old.affirm || '';
+    return s2;
+  }
+
+  const i18n = {
+    ko: {
+      other: '기타', diaryPh: '오늘 내 몸·감정·생각이 어땠는지 일기처럼 자유롭게 적어 보세요 (정·기·신).', mAllTitle: '이번 달 전체 일정', hBackup: '백업', bkNote: '데이터는 이 기기·이 주소의 브라우저에만 저장됩니다. 다른 주소(GitHub/Netlify)나 다른 브라우저에서는 보이지 않으니 백업해 두세요.', bkShow: '백업 보기', bkLoad: '붙여넣은 백업 불러오기', sVision: '비전', sYear: '연간', sMonth: '월간·일정표', sToday: '오늘', hLong: '장기 비전 (자동 정리)', hYear: '연간 계획', hMonth: '월간 계획', hCal: '월 일정표', hBody: '오늘의 내 상태 (일기)', mGoalTitle: '이달의 목표', pYear: '연간 계획', pMonth: '월간 계획',
+      dateLbl: '날짜', noParent: '기타', goalPh: '목표를 입력하세요', emptyGoal: '아직 목표가 없습니다. 아래에서 추가하세요.', pSched: '시간대별 일정', pMemo: '메모',
+      appSub: '정·기·신 3대 바디 의식적 조절 & 자기창조 시스템',
+      langBtn: 'English',
+      guest: '게스트 상태',
+      loggedInSuffix: ' 로그인됨',
+      loginBtn: 'Pi 로그인',
+      logoutBtn: '로그아웃',
+      nav1: '1. 4대 비전',
+      nav2: '2. 열품타 스터디',
+      nav3: '3. 프로젝트 방',
+      nav4: '4. 통합 일정표 & 브리핑',
+      hVision: '4단계 비전',
+      vLife: '인생 비전',
+      v10: '10년 비전',
+      v35: '3~5년 비전',
+      v12: '1~2년 비전',
+      edit: '수정',
+      ok: '확인',
+      emptyVision: '입력된 비전이 없습니다. [수정]을 눌러 작성해 보세요.',
+      sin: '신(神 · 정보/사고)',
+      gi: '기(氣 · 감정/흐름)',
+      jeong: '정(精 · 신체/행동)',
+      saveBody: '일기 저장',
+      print: 'A4 다이어리 인쇄',
+      saved: '저장되었습니다!',
+      hPlan: '오늘의 계획 (보기 전용 · 입력은 월간·일정표 탭)',
+      optStudy: '공부 계획',
+      optAction: '일반 실천',
+      planPh: '할 일을 입력하세요',
+      add: '추가',
+      del: '삭제',
+      noPlan: '등록된 계획이 없습니다.',
+      hTimer: '열품타 집중 스톱워치',
+      timerSub: '오늘의 순수 집중 공부 시간',
+      tStart: '시작',
+      tPause: '일시정지',
+      tReset: '초기화',
+      hStudyGoal: '오늘의 연동된 공부 목표 & Pi 벌금 정산',
+      penaltyRate: '미달성 1건당 벌금(Pi):',
+      noStudy: '탭 1에서 [공부 계획]을 등록하면 자동으로 표시됩니다.',
+      done: '달성 완료',
+      doing: '진행 중',
+      hProj: '프로젝트 일정 등록 (탭 4 자동 연동)',
+      projTitlePh: '프로젝트명',
+      projDetailPh: '참여 인원 및 실행 내용',
+      reg: '등록',
+      noProj: '등록된 프로젝트가 없습니다.',
+      hBrief: '아침 모닝 브리핑 (음성 TTS & 비주얼 프롬프터)',
+      affirmLbl: '긍정 확언 & 오늘 외울 암기 문장',
+      affirmPh: '오늘 아침 나에게 들려줄 긍정 문장을 입력하세요',
+      saveAffirm: '문구 저장',
+      startBrief: '브리핑 실행',
+      stopBrief: '정지',
+      prompterReady: '버튼을 누르면 비전과 오늘의 일정이 브리핑됩니다.',
+      hIntegrated: '통합 자동 일정표 (시간순 자동 취합)',
+      noIntegrated: '등록된 일정이 없습니다.'
+    },
+    en: {
+      other: 'Other', diaryPh: 'Write freely about your body, feelings and thoughts today.', mAllTitle: 'All plans this month', hBackup: 'Backup', bkNote: 'Data is stored only in this browser and address. It will not appear on another address or browser, so keep a backup.', bkShow: 'Show backup', bkLoad: 'Load pasted backup', sVision: 'Vision', sYear: 'Year', sMonth: 'Month', sToday: 'Today', hLong: 'Long-term Vision (auto)', hYear: 'Yearly Plan', hMonth: 'Monthly Plan', hCal: 'Monthly Schedule', hBody: 'My Status Today (Diary)', mGoalTitle: 'Goals this month', pYear: 'Yearly Plan', pMonth: 'Monthly Plan',
+      dateLbl: 'Date', noParent: 'Other', goalPh: 'Enter a goal', emptyGoal: 'No goals yet. Add one below.', pSched: 'Schedule', pMemo: 'Memo',
+      appSub: 'Conscious Regulation of Spirit·Energy·Body & Self-Creation',
+      langBtn: '한국어',
+      guest: 'Guest Mode',
+      loggedInSuffix: ' Logged In',
+      loginBtn: 'Pi Login',
+      logoutBtn: 'Logout',
+      nav1: '1. Four Visions',
+      nav2: '2. Study Timer & Pi',
+      nav3: '3. Project Room',
+      nav4: '4. Integrated Briefing',
+      hVision: '4-Stage Vision',
+      vLife: 'Life Vision',
+      v10: '10-Year Vision',
+      v35: '3~5 Year Vision',
+      v12: '1~2 Year Vision',
+      edit: 'Edit',
+      ok: 'OK',
+      emptyVision: 'No vision entered yet. Click [Edit] to write.',
+      sin: 'Spirit (신 · Info/Mind)',
+      gi: 'Energy (기 · Emotion/Flow)',
+      jeong: 'Body (정 · Physical/Action)',
+      saveBody: 'Save Diary',
+      print: 'Print A4 Diary',
+      saved: 'Saved!',
+      hPlan: 'Today\'s Plan (view only · add in the Month tab)',
+      optStudy: 'Study Plan',
+      optAction: 'Daily Action',
+      planPh: 'Enter your task',
+      add: 'Add',
+      del: 'Delete',
+      noPlan: 'No plans added yet.',
+      hTimer: 'Focus Study Stopwatch',
+      timerSub: 'Pure Focus Study Time Today',
+      tStart: 'Start',
+      tPause: 'Pause',
+      tReset: 'Reset',
+      hStudyGoal: 'Synced Study Goals & Pi Penalty',
+      penaltyRate: 'Penalty per incomplete task (Pi):',
+      noStudy: 'Add a [Study Plan] in Tab 1 to sync here.',
+      done: 'Completed',
+      doing: 'In Progress',
+      hProj: 'Project Schedule (Auto-Sync to Tab 4)',
+      projTitlePh: 'Project Title',
+      projDetailPh: 'Members & Action Plan',
+      reg: 'Register',
+      noProj: 'No projects registered.',
+      hBrief: 'Morning Briefing (TTS Audio & Visual Prompter)',
+      affirmLbl: 'Positive Affirmation & Daily Quote',
+      affirmPh: 'Enter your morning affirmation',
+      saveAffirm: 'Save Text',
+      startBrief: 'Start Briefing',
+      stopBrief: 'Stop',
+      prompterReady: 'Press Start Briefing to play your vision and today schedule.',
+      hIntegrated: 'Integrated Master Schedule (Chronological)',
+      noIntegrated: 'No schedules available.'
+    }
+  };
+
+  function loadState() {
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) { state = Object.assign(newState(), JSON.parse(raw)); return; }
+      const old = localStorage.getItem(OLD_KEY);
+      if (old) { state = migrate(JSON.parse(old)); saveRaw(); }
+    } catch (e) { console.error('[MM] 저장 데이터 읽기 실패:', e); }
+  }
+  function saveRaw() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.error('[MM] 저장 실패:', e); }
+  }
+  function saveState() {
+    saveRaw();
+    render();
+  }
+
+  // 탭 전환
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.target).classList.add('active');
+    });
+  });
+
+  // 한영 전환
+  function toggleLang() {
+    state.lang = state.lang === 'ko' ? 'en' : 'ko';
+    saveState();
+  }
+
+  // Pi SDK 초기화
+  function initPiSdk() {
+    try {
+      if (window.Pi && typeof window.Pi.init === 'function') {
+        window.Pi.init({ version: '2.0', sandbox: true });
+      }
+    } catch (e) {}
+  }
+  initPiSdk();
+
+  // 로그인 / 로그아웃 (실패해도 앱은 계속 사용 가능, 원인은 콘솔에 남김)
+  function onIncompletePaymentFound(payment) {
+    console.warn('[MM] 미완료 결제 발견 (3단계에서 서버 처리 예정):', payment);
+  }
+  async function handleAuthClick() {
+    if (state.user) { state.user = null; saveState(); return; }
+    initPiSdk();
+    let user = null;
+    try {
+      if (window.Pi && typeof window.Pi.authenticate === 'function') {
+        const auth = await Promise.race([
+          window.Pi.authenticate(['username', 'payments'], onIncompletePaymentFound),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Pi 로그인 응답 시간 초과(30초)')), 30000))
+        ]);
+        if (auth && auth.user && auth.user.username) user = { username: '@' + auth.user.username, isReal: true };
+        else console.error('[MM] Pi 로그인 응답에 username이 없습니다:', auth);
+      } else {
+        console.error('[MM] Pi SDK 없음: Pi Browser가 아니거나 SDK 로드에 실패했습니다.');
+      }
+    } catch (e) {
+      console.error('[MM] Pi 로그인 실패:', e);
+    }
+    state.user = user || { username: '@mm_tester_fallback', isReal: false };
+    saveState();
+  }
+
+  // 비전 목표 트리 (인생 → 10년 → 3~5년 → 1~2년)
+  function renderGoalTree(t) {
+    const el = document.getElementById('goalTree');
+    const keep = {};
+    el.querySelectorAll('[data-keep]').forEach(x => { keep[x.id] = x.value; });
+    let html = '';
+    LEVELS.forEach((lv, i) => {
+      const goals = state.goals.filter(g => g.level === lv);
+      const parents = i > 0 ? state.goals.filter(g => g.level === LEVELS[i - 1]) : [];
+      html += `<div class="vision-box"><div class="vision-head"><span class="vision-title">${t[LEVEL_LABEL[lv]]}</span></div>`;
+      html += goals.length === 0 ? `<div class="vision-text" style="color:#999;">${t.emptyGoal}</div>` : goals.map(g => {
+        const par = state.goals.find(x => x.id === g.parentId);
+        const up = upTag(g, t) ? `<div class="goal-up">${upTag(g, t)}</div>` : '';
+        if (editingGoalId === g.id) {
+          return `<div class="goal-item"><textarea id="ge_${g.id}" rows="2" style="margin:0;">${esc(g.text)}</textarea>
+            <button type="button" class="btn-teal btn-sm" onclick="saveGoalEdit('${g.id}')">${t.ok}</button></div>`;
+        }
+        return `<div class="goal-item"><div><div class="vision-text">${esc(g.text)}</div>${up}</div>
+          <div class="no-print" style="display:flex; gap:4px;">
+            <button type="button" class="btn-purple btn-sm" onclick="editGoal('${g.id}')">${t.edit}</button>
+            <button type="button" class="btn-danger btn-sm" onclick="deleteGoal('${g.id}')">${t.del}</button></div></div>`;
+      }).join('');
+      html += `<div class="row-input no-print" style="margin-top:8px;">`;
+      if (i > 0) html += `<select id="gp_${lv}" data-keep style="max-width:200px;"><option value="">${t.noParent}</option>${parents.map(p => `<option value="${p.id}">${esc(shortText(p.text))}</option>`).join('')}</select>`;
+      html += `<textarea id="gt_${lv}" data-keep rows="2" placeholder="${t.goalPh}" style="flex:2; min-width:160px; margin-bottom:0;"></textarea>
+        <button type="button" class="btn-teal btn-sm" onclick="addGoal('${lv}')">${t.add}</button></div></div>`;
+    });
+    el.innerHTML = html;
+    Object.keys(keep).forEach(id => { const x = document.getElementById(id); if (x) x.value = keep[id]; });
+  }
+  function addGoal(lv) {
+    const box = document.getElementById('gt_' + lv);
+    const text = box.value.trim();
+    if (!text) return;
+    const ps = document.getElementById('gp_' + lv);
+    state.goals.push({ id: 'g' + Date.now().toString(36) + Math.floor(Math.random() * 1000), level: lv, text, parentId: (ps && ps.value) || null, period: lv === 'year' ? String(viewYear) : lv === 'month' ? viewMonth : '' });
+    box.value = '';
+    saveState();
+  }
+  function editGoal(id) { editingGoalId = id; render(); }
+  function saveGoalEdit(id) {
+    const g = state.goals.find(x => x.id === id), e = document.getElementById('ge_' + id);
+    if (g && e && e.value.trim()) g.text = e.value.trim();
+    const gy = document.getElementById('gy_' + id), gm = document.getElementById('gm_' + id);
+    if (g && gy) g.period = g.level === 'month' && gm ? gy.value + '-' + String(gm.value).padStart(2, '0') : gy.value;
+    editingGoalId = null;
+    saveState();
+  }
+  function deleteGoal(id) {
+    state.goals = state.goals.filter(g => g.id !== id);
+    state.goals.forEach(g => { if (g.parentId === id) g.parentId = null; });
+    saveState();
+  }
+
+  // 오늘의 내 상태 (일기, 날짜별)
+  function bodyText(dv) {
+    const b = dv.body || {};
+    return b.diary != null ? b.diary : [b.sin, b.gi, b.jeong].filter(Boolean).join('\n');
+  }
+  function saveBodyState() {
+    day(viewDate).body = { diary: document.getElementById('diaryInput').value.trim() };
+    saveState();
+    const msg = document.getElementById('bodySavedMsg');
+    msg.textContent = i18n[state.lang].saved;
+    setTimeout(() => { msg.textContent = ''; }, 2000);
+  }
+
+  // 백업 / 복원 (복사·붙여넣기 방식)
+  function exportData() {
+    const b = document.getElementById('backupBox');
+    b.value = JSON.stringify(state);
+    b.focus(); b.select();
+  }
+  function importData() {
+    try {
+      const o = JSON.parse(document.getElementById('backupBox').value);
+      if (!o || o.schema !== 2) throw new Error('백업 형식이 다릅니다');
+      localStorage.setItem(STORAGE_KEY + '_prev', JSON.stringify(state));
+      state = Object.assign(newState(), o);
+      saveState();
+    } catch (e) { console.error('[MM] 복원 실패:', e); alert('복원 실패: ' + e.message); }
+  }
+
+  // 날짜 선택
+  function setViewDate(v) { if (!v) return; viewDate = v; viewYear = +v.slice(0, 4); viewMonth = v.slice(0, 7); render(); }
+  function renderDateControls(t) {
+    ['viewDate1', 'viewDate4'].forEach(id => setVal(id, viewDate));
+    ['lblDate1', 'lblDate4'].forEach(id => { const e = document.getElementById(id); if (e) e.textContent = t.dateLbl; });
+    const pd = document.getElementById('projDate');
+    if (pd && !pd.value) pd.value = viewDate;
+  }
+
+  // 계획 관리 (날짜별)
+  function addPlan(p) {
+    p = p || 'mPlan';
+    const time = document.getElementById(p + 'Time').value || '09:00';
+    const type = document.getElementById(p + 'Type').value;
+    const gs = document.getElementById(p + 'Goal');
+    const goalId = (gs && gs.value) || null;
+    let text = document.getElementById(p + 'Text').value.trim();
+    if (!text && goalId) { const g = state.goals.find(x => x.id === goalId); if (g) text = g.text; }
+    if (!text) return;
+    day(viewDate).plans.push({ id: Date.now(), time, type, text, done: false, roomId: null, targetMin: 0, focusSec: 0, goalId });
+    document.getElementById(p + 'Text').value = '';
+    saveState();
+  }
+  function togglePlan(id) {
+    const item = day(viewDate).plans.find(p => p.id === id);
+    if (item) item.done = !item.done;
+    saveState();
+  }
+  function deletePlan(id) {
+    const d = day(viewDate);
+    d.plans = d.plans.filter(p => p.id !== id);
+    saveState();
+  }
+  function updatePenaltyRate() {
+    const val = parseFloat(document.getElementById('penaltyRate').value);
+    state.penaltyRate = isNaN(val) ? 1 : val;
+    saveState();
+  }
+
+  // 스톱워치 (오늘 날짜에 누적, 자정이 지나면 새 날짜로 시작)
+  let timerInterval = null;
+  function formatTime(sec) {
+    const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+    const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  }
+  function startTimer() {
+    if (timerInterval) return;
+    timerInterval = setInterval(() => {
+      const d = day(today());
+      d.studySec++;
+      document.getElementById('timerDisplay').textContent = formatTime(d.studySec);
+      saveRaw();
+    }, 1000);
+  }
+  function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
+  function resetTimer() { pauseTimer(); day(today()).studySec = 0; saveState(); }
+
+  // 프로젝트 관리 (날짜 포함)
+  function addProject() {
+    const date = document.getElementById('projDate').value || viewDate;
+    const time = document.getElementById('projTime').value || '14:00';
+    const title = document.getElementById('projTitle').value.trim();
+    const detail = document.getElementById('projDetail').value.trim();
+    if (!title) return;
+    state.projects.push({ id: Date.now(), date, time, title, detail });
+    document.getElementById('projTitle').value = '';
+    document.getElementById('projDetail').value = '';
+    saveState();
+  }
+  function deleteProject(id) {
+    state.projects = state.projects.filter(p => p.id !== id);
+    saveState();
+  }
+
+  // 연간·월간 계획, 월 일정표
+  function showSub(n) {
+    ['vision', 'year', 'month', 'today'].forEach(k => {
+      document.getElementById('sp_' + k).classList.toggle('active', k === n);
+      document.getElementById('sb_' + k).classList.toggle('active', k === n);
+    });
+  }
+  function goalsAt(level, period) { return state.goals.filter(g => g.level === level && g.period === period); }
+  function upTag(g, t) {
+    const par = state.goals.find(x => x.id === g.parentId);
+    return par ? '↑ ' + esc(shortText(par.text)) : (g.level === 'life' ? '' : '↑ ' + t.other);
+  }
+  function setHtmlKeep(id, html) {
+    const el = document.getElementById(id), keep = {};
+    el.querySelectorAll('[data-keep]').forEach(x => { keep[x.id] = x.value; });
+    el.innerHTML = html;
+    Object.keys(keep).forEach(k => { const x = document.getElementById(k); if (x) x.value = keep[k]; });
+  }
+  function periodGoalsHtml(level, period, parents, t) {
+    const gs = goalsAt(level, period);
+    const opts = (from, to, cur, fmt) => { let o = ''; for (let i = from; i <= to; i++) o += `<option value="${i}" ${i === cur ? 'selected' : ''}>${fmt(i)}</option>`; return o; };
+    let h = gs.length ? gs.map(g => {
+      if (editingGoalId === g.id) {
+        const [yy, mm] = g.period.split('-').map(Number);
+        return `<div class="goal-item"><div style="flex:1;"><textarea id="ge_${g.id}" rows="2" style="margin:0;">${esc(g.text)}</textarea>
+          <div class="row-input" style="margin-top:6px;"><select id="gy_${g.id}" style="max-width:110px;">${opts(yy - 3, yy + 6, yy, i => i)}</select>
+          ${g.level === 'month' ? `<select id="gm_${g.id}" style="max-width:90px;">${opts(1, 12, mm, i => i + (state.lang === 'en' ? '' : '월'))}</select>` : ''}</div></div>
+          <button type="button" class="btn-teal btn-sm" onclick="saveGoalEdit('${g.id}')">${t.ok}</button></div>`;
+      }
+      return `<div class="goal-item"><div><div class="vision-text">${esc(g.text)}</div><div class="goal-up">${upTag(g, t)}</div></div>
+        <div style="display:flex; gap:4px;"><button type="button" class="btn-purple btn-sm" onclick="editGoal('${g.id}')">${t.edit}</button>
+        <button type="button" class="btn-danger btn-sm" onclick="deleteGoal('${g.id}')">${t.del}</button></div></div>`;
+    }).join('') : `<div class="vision-text" style="color:#999;">${t.emptyGoal}</div>`;
+    h += `<div class="row-input no-print" style="margin-top:8px;"><select id="gp_${level}" data-keep style="max-width:200px;"><option value="">${t.noParent}</option>${parents.map(x => `<option value="${x.id}">${esc(shortText(x.text))}</option>`).join('')}</select>
+      <textarea id="gt_${level}" data-keep rows="2" placeholder="${t.goalPh}" style="flex:2; min-width:160px; margin-bottom:0;"></textarea>
+      <button type="button" class="btn-teal btn-sm" onclick="addGoal('${level}')">${t.add}</button></div>`;
+    return h;
+  }
+  function planListHtml(plans, t, ro) {
+    return plans.length === 0 ? `<li style="color:#888;">${t.noPlan}</li>` : plans.slice().sort((a, b) => a.time.localeCompare(b.time)).map(p => {
+      const gl = p.goalId && state.goals.find(g => g.id === p.goalId);
+      return `<li><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <input type="checkbox" ${p.done ? 'checked' : ''} onchange="togglePlan(${p.id})" />
+        <span class="tag ${p.type === 'study' ? 'tag-study' : ''}">${p.time} · ${p.type === 'study' ? t.optStudy : t.optAction}</span>
+        <span class="${p.done ? 'done-text' : ''}">${esc(p.text)}</span>
+        <span class="goal-up">${gl ? '🎯 ' + esc(shortText(gl.text)) : t.other}</span></div>
+        ${ro ? '' : `<button type="button" class="btn-danger" onclick="deletePlan(${p.id})">${t.del}</button>`}</li>`;
+    }).join('');
+  }
+  function moveYear(d) { viewYear += d; render(); }
+  function moveMonth(d) {
+    let [y, m] = viewMonth.split('-').map(Number);
+    m += d;
+    if (m < 1) { m = 12; y--; } else if (m > 12) { m = 1; y++; }
+    viewMonth = y + '-' + String(m).padStart(2, '0');
+    render();
+  }
+  function goMonth(per) { viewMonth = per; showSub('month'); render(); }
+  function renderPlanning(t) {
+    const en = state.lang === 'en';
+    ['vision', 'year', 'month', 'today'].forEach(k => { document.getElementById('sb_' + k).textContent = t['s' + k.charAt(0).toUpperCase() + k.slice(1)]; });
+    ['hLong', 'hYear', 'hMonth', 'hCal', 'hBody'].forEach(k => { document.getElementById(k).textContent = t[k]; });
+    document.getElementById('mPlanText').placeholder = t.planPh;
+    document.getElementById('mBtnAddPlan').textContent = t.add;
+    const mo = document.getElementById('mPlanType').options; mo[0].textContent = t.optStudy; mo[1].textContent = t.optAction;
+
+    document.getElementById('longList').innerHTML = LEVELS.map(lv => {
+      const gs = state.goals.filter(g => g.level === lv);
+      return `<div class="vision-box"><div class="vision-title">${t[LEVEL_LABEL[lv]]}</div>${gs.length ? gs.map(g => `<div class="vision-text">• ${esc(g.text)} <span class="goal-up">${upTag(g, t)}</span></div>`).join('') : '<div class="vision-text" style="color:#999;">-</div>'}</div>`;
+    }).join('');
+
+    document.getElementById('yearLbl').textContent = viewYear + (en ? '' : '년');
+    setHtmlKeep('yearGoals', periodGoalsHtml('year', String(viewYear), state.goals.filter(g => g.level === 'y12'), t));
+    let mg = '';
+    for (let m = 1; m <= 12; m++) {
+      const per = viewYear + '-' + String(m).padStart(2, '0'), n = goalsAt('month', per).length;
+      mg += `<button type="button" class="btn-purple btn-sm" onclick="goMonth('${per}')">${m}${en ? '' : '월'}${n ? ' (' + n + ')' : ''}</button>`;
+    }
+    document.getElementById('monthGrid').innerHTML = mg;
+
+    const [y, m] = viewMonth.split('-').map(Number);
+    document.getElementById('monthLbl').textContent = en ? viewMonth : y + '년 ' + m + '월';
+    setHtmlKeep('monthGoals', periodGoalsHtml('month', viewMonth, goalsAt('year', String(y)), t));
+
+    const lead = (new Date(y, m - 1, 1).getDay() + 6) % 7, last = new Date(y, m, 0).getDate(), td = today();
+    const wk = en ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['월', '화', '수', '목', '금', '토', '일'];
+    let cal = '<table class="cal"><tr>' + wk.map(w => `<th>${w}</th>`).join('') + '</tr><tr>';
+    for (let i = 0; i < lead; i++) cal += '<td></td>';
+    for (let d = 1; d <= last; d++) {
+      const ds = viewMonth + '-' + String(d).padStart(2, '0');
+      const pl = state.days[ds] ? state.days[ds].plans.length : 0, pj = state.projects.filter(x => x.date === ds).length;
+      const cls = [ds === viewDate ? 'sel' : '', ds === td ? 'tod' : '', (lead + d - 1) % 7 === 6 ? 'sun' : ''].join(' ');
+      cal += `<td class="${cls}" onclick="setViewDate('${ds}')">${d}${pl ? `<small>${pl}</small>` : ''}${pj ? `<small>▲${pj}</small>` : ''}</td>`;
+      if ((lead + d) % 7 === 0 && d < last) cal += '</tr><tr>';
+    }
+    document.getElementById('monthCal').innerHTML = cal + '</tr></table>';
+    document.getElementById('calDayLbl').textContent = viewDate;
+    document.getElementById('hCal').textContent = t.hCal + ' · ' + (en ? viewMonth : y + '년 ' + m + '월');
+    const mgs2 = goalsAt('month', viewDate.slice(0, 7));
+    const sel = document.getElementById('mPlanGoal'), cur = sel.value;
+    sel.innerHTML = `<option value="">${t.other}</option>` + mgs2.map(g => `<option value="${g.id}">${esc(shortText(g.text))}</option>`).join('');
+    sel.value = cur;
+    document.getElementById('todayGoals').innerHTML = mgs2.length ? `<div class="vision-box"><div class="vision-title">${t.mGoalTitle}</div>${mgs2.map(g => `<div class="vision-text">• ${esc(g.text)}</div>`).join('')}</div>` : '';
+    document.getElementById('hMonthAll').textContent = t.mAllTitle;
+    const ds2 = Object.keys(state.days).filter(d => d.startsWith(viewDate.slice(0, 7)) && state.days[d].plans.length).sort();
+    document.getElementById('monthAll').innerHTML = ds2.length ? ds2.map(d => `<div class="vision-box"><div class="vision-title">${d.slice(5)}</div>${state.days[d].plans.slice().sort((a, b) => a.time.localeCompare(b.time)).map(x => `<div class="vision-text">${x.done ? '☑' : '☐'} ${x.time} ${esc(x.text)}</div>`).join('')}</div>`).join('') : '<div class="vision-text" style="color:#999;">-</div>';
+    ['hBackup', 'bkNote', 'bkShow', 'bkLoad'].forEach(k => { document.getElementById(k).textContent = t[k]; });
+
+    const mgs = goalsAt('month', viewDate.slice(0, 7));
+    document.getElementById('monthGoalsBox').innerHTML = mgs.length ? `<div class="vision-box"><div class="vision-title">${t.mGoalTitle}</div>${mgs.map(g => `<div class="vision-text">• ${esc(g.text)}</div>`).join('')}</div>` : '';
+  }
+
+  // A4 가로 다이어리 인쇄 (선택한 날짜 1장, 탭 4에서 실행)
+  function printDiary() {
+    const t = i18n[state.lang], vd = viewDate;
+    const dv = state.days[vd] || { body: {}, plans: [] };
+    const goalsOf = lv => state.goals.filter(g => g.level === lv).map(g => esc(g.text)).join('\n') || '-';
+    const rows = [
+      ...dv.plans.map(p => ({ time: p.time, label: p.type === 'study' ? t.optStudy : t.optAction, text: p.text, done: p.done })),
+      ...state.projects.filter(pr => pr.date === vd).map(pr => ({ time: pr.time, label: state.lang === 'en' ? 'Project' : '프로젝트', text: pr.title, done: false }))
+    ].sort((a, b) => a.time.localeCompare(b.time));
+    document.getElementById('printSheet').innerHTML = `
+      <div class="ps-head"><span>${t.hVision.split('&')[0]}</span><span>${vd}</span></div>
+      <div class="ps-cols">
+        <div class="ps-col">
+          ${LEVELS.map(lv => `<h3>${t[LEVEL_LABEL[lv]]}</h3><p>${goalsOf(lv)}</p>`).join('')}
+          <h3>${t.pYear}</h3><p>${goalsAt('year', vd.slice(0, 4)).map(g => esc(g.text)).join('\n') || '-'}</p>
+          <h3>${t.pMonth}</h3><p>${goalsAt('month', vd.slice(0, 7)).map(g => esc(g.text)).join('\n') || '-'}</p>
+          <h3>${t.hBody}</h3><p>${esc(bodyText(dv))}</p>
+        </div>
+        <div class="ps-col">
+          <h3>${t.pSched}</h3>
+          <table>${rows.length ? rows.map(r => `<tr><td style="width:52px;">${r.time}</td><td style="width:20px;">${r.done ? '☑' : '☐'}</td><td>${esc(r.label)} · ${esc(r.text)}</td></tr>`).join('') : `<tr><td>${t.noIntegrated}</td></tr>`}</table>
+          <h3>${t.pMemo}</h3><div class="memo"></div>
+        </div>
+      </div>`;
+    try { window.print(); } catch (e) { console.error('[MM] 인쇄 실패(Pi Browser는 인쇄를 지원하지 않을 수 있음):', e); }
+  }
+
+  // 모닝 브리핑 (TTS + 비주얼 프롬프터)
+  let briefTimer = null;
+  function saveAffirm() {
+    state.affirm = document.getElementById('affirmInput').value.trim();
+    saveState();
+  }
+
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(528, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    } catch (e) {}
+  }
+
+  function startBriefing() {
+    stopBriefing();
+    state.affirm = document.getElementById('affirmInput').value.trim();
+    const isEn = state.lang === 'en';
+    const lines = [];
+    lines.push(isEn ? 'Good morning! Starting your Make Me with Pi briefing.' : '좋은 아침입니다! Make Me with Pi 모닝 브리핑을 시작합니다.');
+    const lifeTxt = state.goals.filter(g => g.level === 'life').map(g => g.text).join(' / ');
+    if (lifeTxt) lines.push((isEn ? 'Life Vision: ' : '인생 비전: ') + lifeTxt);
+    const monthTxt = goalsAt('month', today().slice(0, 7)).map(g => g.text).join(' / ');
+    if (monthTxt) lines.push((isEn ? 'This month: ' : '이번 달 목표: ') + monthTxt);
+    if (state.affirm) lines.push((isEn ? 'Affirmation: ' : '긍정 확언: ') + state.affirm);
+
+    const all = [
+      ...(state.days[today()] ? state.days[today()].plans : []).map(p => ({ time: p.time, text: p.text })),
+      ...state.projects.filter(pr => pr.date === today()).map(pr => ({ time: pr.time, text: pr.title }))
+    ].sort((a, b) => a.time.localeCompare(b.time));
+
+    if (all.length === 0) {
+      lines.push(isEn ? 'No scheduled tasks for today.' : '오늘 등록된 일정이 없습니다.');
+    } else {
+      all.forEach(item => lines.push(`${item.time} - ${item.text}`));
+    }
+
+    playBeep();
+    let idx = 0;
+    const box = document.getElementById('prompterText');
+    box.textContent = lines[0];
+
+    briefTimer = setInterval(() => {
+      idx++;
+      if (idx >= lines.length) {
+        clearInterval(briefTimer);
+        briefTimer = null;
+        return;
+      }
+      box.textContent = lines[idx];
+    }, 3200);
+
+    try {
+      if ('speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined') {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(lines.join('. '));
+        utter.lang = isEn ? 'en-US' : 'ko-KR';
+        window.speechSynthesis.speak(utter);
+      }
+    } catch (e) {}
+  }
+
+  function stopBriefing() {
+    clearInterval(briefTimer);
+    briefTimer = null;
+    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+    document.getElementById('prompterText').textContent = i18n[state.lang].prompterReady;
+  }
+
+  function esc(str) {
+    return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  }
+
+  function render() {
+    const t = i18n[state.lang];
+    const vd = viewDate;
+    const dv = state.days[vd] || { body: { sin: '', gi: '', jeong: '' }, plans: [], studySec: 0 };
+    const dt = state.days[today()] || { plans: [], studySec: 0 };
+    renderDateControls(t);
+    document.getElementById('appSub').textContent = t.appSub;
+    document.getElementById('langBtn').textContent = t.langBtn;
+
+    const userBadge = document.getElementById('userDisplay');
+    const authBtn = document.getElementById('authBtn');
+    if (state.user) {
+      userBadge.textContent = state.user.username + t.loggedInSuffix + (state.user.isReal ? '' : ' ⚠test');
+      authBtn.textContent = t.logoutBtn;
+      authBtn.className = 'btn-logout';
+    } else {
+      userBadge.textContent = t.guest;
+      authBtn.textContent = t.loginBtn;
+      authBtn.className = 'btn-gold';
+    }
+
+    document.getElementById('nav1').textContent = t.nav1;
+    document.getElementById('nav2').textContent = t.nav2;
+    document.getElementById('nav3').textContent = t.nav3;
+    document.getElementById('nav4').textContent = t.nav4;
+
+    document.getElementById('hVision').textContent = t.hVision;
+    renderGoalTree(t);
+    renderPlanning(t);
+
+    setVal('diaryInput', bodyText(dv));
+    document.getElementById('diaryInput').placeholder = t.diaryPh;
+    document.getElementById('btnSaveBody').textContent = t.saveBody;
+    document.getElementById('btnPrint').textContent = t.print;
+
+    document.getElementById('hPlan').textContent = t.hPlan;
+
+    document.getElementById('planList').innerHTML = planListHtml(dv.plans, t, true);
+    document.getElementById('mPlanList').innerHTML = planListHtml(dv.plans, t);
+
+    document.getElementById('hTimer').textContent = t.hTimer;
+    document.getElementById('lblTimerSub').textContent = t.timerSub;
+    document.getElementById('timerDisplay').textContent = formatTime(dt.studySec);
+    document.getElementById('btnTStart').textContent = t.tStart;
+    document.getElementById('btnTPause').textContent = t.tPause;
+    document.getElementById('btnTReset').textContent = t.tReset;
+
+    document.getElementById('hStudyGoal').textContent = t.hStudyGoal;
+    document.getElementById('lblPenaltyRate').textContent = t.penaltyRate;
+    setVal('penaltyRate', state.penaltyRate);
+
+    const studyPlans = dt.plans.filter(p => p.type === 'study');
+    const studyGoalEl = document.getElementById('studyGoalList');
+    studyGoalEl.innerHTML = studyPlans.length === 0
+      ? `<li style="color:#888;">${t.noStudy}</li>`
+      : studyPlans.map(p => `
+        <li>
+          <div>
+            <span class="tag tag-study">${p.time}</span>
+            <span class="${p.done ? 'done-text' : ''}">${esc(p.text)}</span>
+          </div>
+          <span>${p.done ? '✅ ' + t.done : '⏳ ' + t.doing}</span>
+        </li>
+      `).join('');
+
+    const undone = studyPlans.filter(p => !p.done).length;
+    const totalPenalty = undone * state.penaltyRate;
+    document.getElementById('penaltySummary').textContent = state.lang === 'en'
+      ? `Incomplete: ${undone} / ${studyPlans.length} (Estimated Penalty: ${totalPenalty} Pi)`
+      : `총 공부 목표 ${studyPlans.length}건 중 미달성 ${undone}건 (예상 벌금: ${totalPenalty} Pi)`;
+
+    document.getElementById('hProj').textContent = t.hProj;
+    document.getElementById('projTitle').placeholder = t.projTitlePh;
+    document.getElementById('projDetail').placeholder = t.projDetailPh;
+    document.getElementById('btnAddProj').textContent = t.reg;
+
+    const projListEl = document.getElementById('projectList');
+    projListEl.innerHTML = state.projects.length === 0
+      ? `<li style="color:#888;">${t.noProj}</li>`
+      : state.projects.map(pr => `
+        <li>
+          <div>
+            <span class="tag tag-proj">${pr.date ? pr.date.slice(5) + ' ' : ''}${pr.time}</span>
+            <strong>${esc(pr.title)}</strong>
+            <div style="font-size:0.84rem; color:#555; margin-top:3px;">${esc(pr.detail)}</div>
+          </div>
+          <button type="button" class="btn-danger" onclick="deleteProject(${pr.id})">${t.del}</button>
+        </li>
+      `).join('');
+
+    document.getElementById('hBrief').textContent = t.hBrief;
+    document.getElementById('lblAffirm').textContent = t.affirmLbl;
+    document.getElementById('affirmInput').placeholder = t.affirmPh;
+    setVal('affirmInput', state.affirm || '');
+    document.getElementById('btnSaveAffirm').textContent = t.saveAffirm;
+    document.getElementById('btnStartBrief').textContent = t.startBrief;
+    document.getElementById('btnStopBrief').textContent = t.stopBrief;
+    if (!briefTimer) {
+      document.getElementById('prompterText').textContent = t.prompterReady;
+    }
+
+    document.getElementById('hIntegrated').textContent = t.hIntegrated;
+    const combined = [
+      ...dv.plans.map(p => ({ time: p.time, label: p.type === 'study' ? t.optStudy : t.optAction, text: p.text, done: p.done, isProj: false })),
+      ...state.projects.filter(pr => pr.date === vd).map(pr => ({ time: pr.time, label: state.lang === 'en' ? 'Project' : '프로젝트', text: pr.title + (pr.detail ? ` (${pr.detail})` : ''), done: false, isProj: true }))
+    ].sort((a, b) => a.time.localeCompare(b.time));
+
+    const integratedEl = document.getElementById('integratedList');
+    integratedEl.innerHTML = combined.length === 0
+      ? `<li style="color:#888;">${t.noIntegrated}</li>`
+      : combined.map(item => `
+        <li>
+          <div>
+            <span class="tag ${item.isProj ? 'tag-proj' : 'tag-study'}">${item.time} · ${item.label}</span>
+            <span class="${item.done ? 'done-text' : ''}">${esc(item.text)}</span>
+          </div>
+        </li>
+      `).join('');
+  }
+
+  loadState();
+  render();
+</script>
+</body>
+</html>
